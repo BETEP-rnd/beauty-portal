@@ -2,8 +2,24 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="refresh" content="0; url=price/">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Бьюти портал</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Montserrat:wght@400;500&display=swap">
+<link rel="stylesheet" href="kit/kit.css">
+<style>
+  .hub { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+  .hub h1 { font-family: var(--display); font-size: 44px; margin: 0; }
+  .card { display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; color: inherit; text-decoration: none; }
+  .card b { display: block; font-size: 18px; margin-bottom: 6px; color: var(--accent); }
+  .card span { color: var(--muted); font-size: 14px; line-height: 1.5; }
+</style>
 </head>
-<body><a href="price/">Конструктор прайс-листа</a></body>
+<body>
+<div class="hub">
+  <h1>Бьюти портал</h1>
+  <p class="hint">Картинки для мастеров: прайс-лист и свободные окошки. Контакты мастера заполняются один раз и подставляются во все разделы.</p>
+  <a class="card" href="price/"><b>Прайс-лист</b><span>Услуги и цены по профессиям, свои услуги, 300 фонов, шрифты.</span></a>
+  <a class="card" href="windows/"><b>Свободные окошки</b><span>Отметьте свободное время на неделю — получите картинку для канала или сторис.</span></a>
+</div>
+</body>
 </html>

@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f3ee">
+<title>Свободные окошки</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Raleway:ital,wght@0,400;0,600;0,700;1,400&family=Manrope:wght@400;600;700&family=Nunito:ital,wght@0,400;0,700;1,400&family=Comfortaa:wght@400;700&family=Oswald:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Lora:ital,wght@0,400;0,700;1,400&family=Prata&family=Forum&family=Poiret+One&family=Marck+Script&family=Bad+Script&family=Caveat:wght@400;700&family=Lobster&family=Amatic+SC:wght@400;700&display=swap">
+<link rel="stylesheet" href="../kit/kit.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Свободные окошки</h1>
+    <nav><a href="../price/">Прайс-лист</a><a href="../windows/" aria-current="page">Свободные окошки</a></nav>
+  </header>
+
+  <div class="grid">
+    <form class="panel" id="form" novalidate>
+      <nav class="tabs" role="tablist" id="tabs">
+        <button type="button" role="tab" data-tab="content">Содержание</button>
+        <button type="button" role="tab" data-tab="design">Дизайн</button>
+        <button type="button" role="tab" data-tab="fonts">Шрифты</button>
+      </nav>
+
+      <!-- Содержание -->
+      <div class="tab" data-tab="content">
+        <section class="group">
+          <h2>Период и рабочий день</h2>
+          <div class="row">
+            <div class="field"><label for="start">С какого дня</label><input id="start" type="date"></div>
+            <div class="field"><label for="ndays">Сколько дней</label>
+              <select id="ndays"><option value="1">1 день</option><option value="3">3 дня</option><option value="5">5 дней</option>
+                <option value="7">7 дней</option><option value="10">10 дней</option><option value="14">14 дней</option></select></div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="dayStart">Рабочий день с</label><input id="dayStart" type="time" step="900"></div>
+            <div class="field"><label for="dayEnd">до</label><input id="dayEnd" type="time" step="900"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="step">Шаг клетки</label>
+              <select id="step"><option value="15">15 минут</option><option value="30">30 минут</option><option value="60">1 час</option></select></div>
+            <div class="field"><label for="minLen">Самая короткая процедура</label>
+              <select id="minLen"><option value="0">не проверять</option><option value="60">1 час</option><option value="90">1,5 часа</option>
+                <option value="120">2 часа</option><option value="180">3 часа</option></select></div>
+          </div>
+        </section>
+
+        <section class="group">
+          <div class="thead"><h2>Свободное время</h2><button type="button" class="linkbtn" id="clearAll">очистить всё</button></div>
+          <div class="legend"><span><i style="background:var(--free)"></i>свободно</span><span><i style="background:var(--busy)"></i>занято</span>
+            <span>Нажмите на клетку или проведите пальцем по нескольким.</span></div>
+          <div class="days" id="days"></div>
+        </section>
+
+        <section class="group">
+          <h2>На картинке</h2>
+          <div class="seg" id="layout">
+            <button type="button" data-k="list">Список</button>
+            <button type="button" data-k="week">Неделя</button>
+            <button type="button" data-k="starts">Время начала</button>
+          </div>
+          <div class="row">
+            <div class="field"><label for="title">Заголовок</label><input id="title" type="text" maxlength="28"></div>
+            <div class="field"><label for="subtitle">Подзаголовок</label><input id="subtitle" type="text" maxlength="40" placeholder="авто: даты"></div>
+          </div>
+          <label class="check"><input type="checkbox" id="hideBusy"> Не показывать дни без окошек</label>
+        </section>
+
+        <div id="contacts"></div>
+      </div>
+
+      <div class="tab" data-tab="design" id="design" hidden></div>
+      <div class="tab" data-tab="fonts" id="fonts" hidden></div>
+
+      <section class="group">
+        <label class="check"><input type="checkbox" id="watermark"> Водяной знак «ОБРАЗЕЦ»</label>
+        <div class="btnrow">
+          <button class="btn" type="button" id="download">Скачать картинку</button>
+          <button class="btn ghost" type="button" id="share" hidden>Отправить</button>
+        </div>
+        <div class="status" id="status" role="status"></div>
+      </section>
+    </form>
+
+    <div class="preview">
+      <canvas id="cv" aria-label="Превью свободных окошек"></canvas>
+      <span class="hint" id="size"></span>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="../kit/backgrounds.js"></script>
+<script src="../kit/kit.js"></script>
+<script>
+const TEXTS = [
+  { k: "title", name: "Заголовок" }, { k: "subtitle", name: "Подзаголовок" }, { k: "master", name: "Имя мастера" },
+  { k: "days", name: "Дни" }, { k: "times", name: "Время" }, { k: "contacts", name: "Контакты" },
+];
+const { W, SCALE, FORMATS, A, mix, rr, fontOf, caseOf, solid } = Kit;
+const $ = id => document.getElementById(id);
+
+// ---------- даты и время ----------
+const DOW = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+const DOW_LONG = ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"];
+const MON = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+const MON_SHORT = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+const pad = n => String(n).padStart(2, "0");
+const toIso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromIso = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (iso, n) => { const d = fromIso(iso); d.setDate(d.getDate() + n); return toIso(d); };
+const toMin = s => { const [h, m] = (s || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
+const hm = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+const dur = m => m % 60 ? `${Math.floor(m / 60)},${m % 60 === 30 ? "5" : String(Math.round(m % 60 / 6))} ч` : `${m / 60} ч`;
+
+// ---------- состояние ----------
+const KEY = "windows.v1";
+let S = { theme: "pastel-0", format: "story", title: "Свободные окошки", subtitle: "", start: toIso(new Date()), ndays: 7,
+  dayStart: "10:00", dayEnd: "18:00", step: 30, minLen: 90, layout: "list", hideBusy: false, free: {}, watermark: true, text: {} };
+const saved = Kit.loadJSON(KEY);
+if (saved) Object.keys(S).forEach(k => { if (saved[k] != null) S[k] = saved[k]; });
+if (!Kit.THEMES[S.theme]) S.theme = "pastel-0";
+if (S.start < toIso(new Date())) S.start = toIso(new Date());   // прошедшие дни не показываем
+Object.keys(S.free).forEach(d => { if (d < addDays(toIso(new Date()), -1)) delete S.free[d]; });
+const prof = Kit.loadProfile();
+const th = () => Kit.THEMES[S.theme] || Kit.THEMES["pastel-0"];
+const base = (k, t) => k === "days" ? { font: "Montserrat", weight: 600, italic: false, caps: false, color: t.ink }
+  : k === "times" ? { font: "Montserrat", weight: 500, italic: false, caps: false, color: t.accent } : null;
+const style = k => Kit.styleOf(S.text, k, th(), base);
+
+const dates = () => Array.from({ length: S.ndays }, (_, i) => addDays(S.start, i));
+const range = () => { const a = toMin(S.dayStart), b = toMin(S.dayEnd); return b > a ? [a, b] : [a, a]; };
+const cells = () => { const [a, b] = range(), out = []; for (let m = a; m + S.step <= b; m += S.step) out.push(m); return out; };
+// свободное время дня хранится интервалами [начало, конец] в минутах — не зависит от шага и рабочего дня
+function intervals(iso) {
+  const [a, b] = range();
+  return (S.free[iso] || []).map(([s, e]) => [Math.max(s, a), Math.min(e, b)]).filter(([s, e]) => e > s);
+}
+const cellOn = (iso, m) => (S.free[iso] || []).some(([s, e]) => s <= m && m + S.step <= e);
+function setCells(iso, onSet) {                                 // клетки дня → интервалы
+  const list = [];
+  cells().forEach(m => { if (onSet.has(m)) { const last = list[list.length - 1]; if (last && last[1] === m) last[1] = m + S.step; else list.push([m, m + S.step]); } });
+  if (list.length) S.free[iso] = list; else delete S.free[iso];
+}
+const dayLabel = iso => { const d = fromIso(iso); return `${DOW[d.getDay()]}, ${d.getDate()} ${MON_SHORT[d.getMonth()]}`; };
+function autoSubtitle() {
+  const ds = dates(), a = fromIso(ds[0]), b = fromIso(ds[ds.length - 1]);
+  if (ds.length === 1) return `${DOW_LONG[a.getDay()]}, ${a.getDate()} ${MON[a.getMonth()]}`;
+  return a.getMonth() === b.getMonth() ? `${a.getDate()} — ${b.getDate()} ${MON[b.getMonth()]}` : `${a.getDate()} ${MON[a.getMonth()]} — ${b.getDate()} ${MON[b.getMonth()]}`;
+}
+
+// ---------- рисование ----------
+const canvas = $("cv"), ctx = canvas.getContext("2d"), dr = Kit.painter(ctx);
+let H = 1920;
+function fit(maxS, minS, height, avail) { let s = maxS; while (s > minS && height(s) > avail) s -= 1; return s; }
+
+function drawList(top, bottom, days, t, P) {                    // день слева, окна справа столбиком
+  const sd = style("days"), stt = style("times"), avail = bottom - top;
+  const rowsH = s => days.reduce((a, d) => a + Math.max(1, d.iv.length) * s * 1.35, 0) + (days.length - 1) * s * .75;
+  const s = fit(Math.min(80, 44 * sd.size), 14, rowsH, avail), ts = s * stt.size / sd.size;
+  let y = top + Math.max(0, (avail - rowsH(s)) * .45);
+  days.forEach(d => {
+    const lines = d.iv.length ? d.iv.map(([a, b]) => `${hm(a)}–${hm(b)}`) : ["занято"], baseY = y + s;
+    ctx.font = fontOf(sd, s); ctx.fillStyle = dr.paint(sd.color, P, P + 300); ctx.textAlign = "left";
+    const label = caseOf(sd, d.label); ctx.fillText(label, P, baseY);
+    const lw = ctx.measureText(label).width;
+    ctx.font = fontOf(stt, ts);
+    lines.forEach((ln, i) => {
+      const text = caseOf(stt, ln), w = ctx.measureText(text).width, x = W - P - w;
+      ctx.fillStyle = d.iv.length ? dr.paint(stt.color, x, x + w) : t.muted; ctx.fillText(text, x, baseY + i * s * 1.35);
+      if (i === 0) { ctx.fillStyle = t.dots; for (let px = P + lw + 18; px < x - 14; px += 13) { ctx.beginPath(); ctx.arc(px, baseY - s * .12, 1.8, 0, Math.PI * 2); ctx.fill(); } }
+    });
+    y += Math.max(1, d.iv.length) * s * 1.35 + s * .75;
+  });
+}
+
+function drawWeek(top, bottom, days, t, P) {                    // столбики по дням, окна — плашками
+  const sd = style("days"), stt = style("times"), avail = bottom - top;
+  const n = days.length, cols = n <= 4 ? n : n <= 6 ? 3 : 4, rowsN = Math.ceil(n / cols), gap = 18;
+  const colW = (W - 2 * P - gap * (cols - 1)) / cols;
+  const fill = t.dark ? A(solid(t.acc), .22) : A(solid(t.acc), .13);
+  const textW = s => { ctx.font = fontOf(stt, s * stt.size / sd.size); return ctx.measureText("00:00–00:00").width; };
+  const blockH = (s, d) => s * 2.6 + Math.max(1, d.iv.length) * s * 1.75;
+  const height = s => { let h = 0; for (let r = 0; r < rowsN; r++) h += Math.max(...days.slice(r * cols, r * cols + cols).map(d => blockH(s, d))) + (r ? s * 1.1 : 0); return h; };
+  let s = Math.min(70, 34 * sd.size);
+  while (s > 12 && (textW(s) > colW - 20 || height(s) > avail)) s -= 1;
+  const ts = s * stt.size / sd.size;
+  let y = top + Math.max(0, (avail - height(s)) * .45);
+  for (let r = 0; r < rowsN; r++) {
+    const row = days.slice(r * cols, r * cols + cols), rowH = Math.max(...row.map(d => blockH(s, d)));
+    const x0 = W / 2 - (row.length * colW + (row.length - 1) * gap) / 2;
+    row.forEach((d, i) => {
+      const cx = x0 + i * (colW + gap) + colW / 2, dt = fromIso(d.iso);
+      dr.centered(caseOf(sd, DOW[dt.getDay()]), cx, y + s, fontOf(sd, s), sd.color, colW);
+      dr.centered(`${pad(dt.getDate())}.${pad(dt.getMonth() + 1)}`, cx, y + s * 2.1, fontOf({ ...sd, weight: 400 }, s * .75), t.muted, colW);
+      let py = y + s * 2.6;
+      if (!d.iv.length) dr.centered("—", cx, py + s * 1.15, fontOf(stt, ts), t.muted, colW);
+      d.iv.forEach(([a, b]) => {
+        ctx.fillStyle = fill; rr(ctx, cx - colW / 2, py, colW, s * 1.5, s * .5); ctx.fill();
+        dr.centered(caseOf(stt, `${hm(a)}–${hm(b)}`), cx, py + s * 1.05, fontOf(stt, ts), stt.color, colW - 16);
+        py += s * 1.75;
+      });
+    });
+    y += rowH + s * 1.1;
+  }
+}
+
+function drawStarts(top, bottom, days, t, P) {                  // день заголовком, ниже — время начала окон
+  const sd = style("days"), stt = style("times"), avail = bottom - top, cw = W - 2 * P;
+  const label = d => { const dt = fromIso(d.iso); return `${DOW_LONG[dt.getDay()]}, ${dt.getDate()} ${MON[dt.getMonth()]}`; };
+  function layout(s) {                                          // раскладка плашек по строкам
+    const ts = s * stt.size / sd.size; ctx.font = fontOf(stt, ts);
+    let h = 0;
+    const blocks = days.map(d => {
+      const chips = d.iv.map(([a]) => caseOf(stt, hm(a))), rows = [[]]; let x = 0;
+      chips.forEach(c => { const w = ctx.measureText(c).width + ts * 1.4; if (x && x + w > cw) { rows.push([]); x = 0; } rows[rows.length - 1].push([c, w]); x += w + ts * .5; });
+      const bh = s * 1.3 + (chips.length ? rows.length * ts * 1.9 : ts * 1.5);
+      h += bh + s * .8; return { d, rows, bh };
+    });
+    return { blocks, h: h - s * .8, ts };
+  }
+  let s = Math.min(70, 30 * sd.size), L = layout(s);
+  while (s > 12 && L.h > avail) { s -= 1; L = layout(s); }
+  let y = top + Math.max(0, (avail - L.h) * .45);
+  L.blocks.forEach(({ d, rows, bh }) => {
+    ctx.font = fontOf(sd, s); ctx.fillStyle = dr.paint(sd.color, P, P + 400); ctx.textAlign = "left";
+    ctx.fillText(caseOf(sd, label(d)), P, y + s);
+    let cy = y + s * 1.3 + L.ts * .25;
+    if (!rows[0].length) { ctx.font = fontOf(stt, L.ts); ctx.fillStyle = t.muted; ctx.fillText("занято", P, cy + L.ts * 1.1); }
+    else rows.forEach(row => {
+      let x = P;
+      row.forEach(([c, w]) => {
+        ctx.strokeStyle = dr.paint(stt.color, x, x + w); ctx.lineWidth = 2; rr(ctx, x, cy, w, L.ts * 1.55, L.ts * .78); ctx.stroke();
+        ctx.font = fontOf(stt, L.ts); ctx.fillStyle = dr.paint(stt.color, x, x + w); ctx.fillText(c, x + L.ts * .7, cy + L.ts * 1.12);
+        x += w + L.ts * .5;
+      });
+      cy += L.ts * 1.9;
+    });
+    y += bh + s * .8;
+  });
+}
+
+function draw() {
+  const t = th(), F = FORMATS[S.format] || FORMATS.story, P = 96;
+  if (H !== F.h || canvas.width !== W * SCALE) { H = F.h; canvas.width = W * SCALE; canvas.height = H * SCALE; }
+  ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0); ctx.globalAlpha = 1; ctx.textBaseline = "alphabetic";
+  Kit.drawBg(ctx, t, W, H);
+  const y = Kit.header(dr, t, F, { title: S.title, titleDefault: "Свободные окошки", subtitle: S.subtitle.trim() || autoSubtitle(), master: prof.master }, style);
+  const foot = Kit.footer(dr, t, F, prof, style), footTop = H - F.bottom - foot.h;
+  let days = dates().map(iso => ({ iso, label: dayLabel(iso), iv: intervals(iso) }));
+  if (S.hideBusy) days = days.filter(d => d.iv.length);
+  const top = y + 56, bottom = footTop - 64;
+  if (!days.length) dr.centered("Отметьте свободное время", W / 2, (top + bottom) / 2, '400 30px "Montserrat"', t.muted);
+  else ({ list: drawList, week: drawWeek, starts: drawStarts }[S.layout] || drawList)(top, bottom, days, t, P);
+  foot.draw(footTop);
+  if (S.watermark) dr.watermark(t, H);
+  $("size").textContent = `Картинка ${W * SCALE} × ${H * SCALE} — для сторис, мессенджеров и печати`;
+}
+let raf = 0;
+function changed() { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); Kit.store.set(KEY, JSON.stringify(S)); }
+
+// ---------- сетка свободного времени ----------
+function summary(iso) {
+  const iv = intervals(iso);
+  if (!iv.length) return { text: "занято", warn: false };
+  const short = S.minLen ? iv.filter(([a, b]) => b - a < S.minLen) : [];
+  const text = iv.map(([a, b]) => `${hm(a)}–${hm(b)}`).join(", ");
+  return short.length ? { text: `${text} · окно ${short.map(([a, b]) => `${hm(a)}–${hm(b)}`).join(", ")} короче ${dur(S.minLen)}`, warn: true } : { text, warn: false };
+}
+function buildDays() {
+  const cs = cells();
+  if (!cs.length) { $("days").innerHTML = `<div class="empty">Проверьте рабочий день: время «до» должно быть позже «с».</div>`; return; }
+  const every = S.step === 15 ? 4 : S.step === 30 ? 2 : 1;      // подпись каждого часа
+  const hours = `<div class="hours">${cs.map((m, i) => `<span>${i % every === 0 && m % 60 === 0 ? m / 60 : ""}</span>`).join("")}</div>`;
+  $("days").innerHTML = dates().map((iso, di) => {
+    const sm = summary(iso);
+    return `<div class="day" data-iso="${iso}">
+      <div class="dayhead"><b>${dayLabel(iso)}</b><span class="sum${sm.warn ? " warn" : ""}">${sm.text}</span>
+        <span class="daytools">
+          <button type="button" class="icon" data-act="all" title="Свободен весь день">весь</button>
+          <button type="button" class="icon" data-act="copy" title="Скопировать на следующий день" ${di < S.ndays - 1 ? "" : "disabled"}>↓</button>
+          <button type="button" class="icon del" data-act="clear" title="Очистить день" aria-label="Очистить день">×</button>
+        </span></div>
+      ${hours}
+      <div class="slots">${cs.map(m => `<button type="button" class="slot${cellOn(iso, m) ? " on" : ""}${m % 60 === 0 ? " hour" : ""}" data-m="${m}" aria-label="${hm(m)}" aria-pressed="${cellOn(iso, m)}"></button>`).join("")}</div>
+    </div>`;
+  }).join("");
+}
+function refreshDay(dayEl) {
+  const iso = dayEl.dataset.iso, sm = summary(iso), sum = dayEl.querySelector(".sum");
+  sum.textContent = sm.text; sum.classList.toggle("warn", sm.warn);
+}
+function commitDay(dayEl) {                                     // клетки дня из DOM → интервалы
+  setCells(dayEl.dataset.iso, new Set([...dayEl.querySelectorAll(".slot.on")].map(b => +b.dataset.m)));
+  refreshDay(dayEl); changed();
+}
+let paint = null;                                               // «рисование» по клеткам пальцем или мышью
+$("days").addEventListener("pointerdown", e => {
+  const b = e.target.closest(".slot"); if (!b) return;
+  e.preventDefault();
+  paint = { on: !b.classList.contains("on"), day: b.closest(".day") };
+  b.classList.toggle("on", paint.on); b.setAttribute("aria-pressed", paint.on); commitDay(paint.day);
+});
+window.addEventListener("pointermove", e => {
+  if (!paint) return;
+  const el = document.elementFromPoint(e.clientX, e.clientY), b = el && el.closest(".slot");
+  if (!b || b.closest(".day") !== paint.day || b.classList.contains("on") === paint.on) return;
+  b.classList.toggle("on", paint.on); b.setAttribute("aria-pressed", paint.on); commitDay(paint.day);
+});
+["pointerup", "pointercancel"].forEach(ev => window.addEventListener(ev, () => { paint = null; }));
+$("days").addEventListener("keydown", e => {                    // с клавиатуры: Enter/пробел на клетке
+  const b = e.target.closest(".slot"); if (!b || (e.key !== "Enter" && e.key !== " ")) return;
+  e.preventDefault(); b.classList.toggle("on"); b.setAttribute("aria-pressed", b.classList.contains("on")); commitDay(b.closest(".day"));
+});
+$("days").addEventListener("click", e => {
+  const b = e.target.closest("button[data-act]"); if (!b) return;
+  const day = b.closest(".day"), iso = day.dataset.iso, [a, z] = range();
+  if (b.dataset.act === "all") S.free[iso] = [[a, z]];
+  if (b.dataset.act === "clear") delete S.free[iso];
+  if (b.dataset.act === "copy") { const next = addDays(iso, 1); if (S.free[iso]) S.free[next] = S.free[iso].map(x => [...x]); else delete S.free[next]; }
+  buildDays(); changed();
+});
+$("clearAll").addEventListener("click", () => { dates().forEach(d => delete S.free[d]); buildDays(); changed(); });
+
+// ---------- панели ----------
+const design = Kit.designPanel($("design"), S, kind => { if (kind === "theme") fonts.refresh(); changed(); });
+const fonts = Kit.fontsPanel($("fonts"), TEXTS, S, style, changed);
+const contacts = Kit.contactsPanel($("contacts"), prof, changed);
+const tabs = Kit.tabs($("tabs"), "windows.tab", name => { if (name === "design") design.show(); });
+
+$("start").addEventListener("change", e => { if (e.target.value) { S.start = e.target.value; buildDays(); changed(); } });
+["ndays", "step", "minLen"].forEach(id => $(id).addEventListener("change", e => { S[id] = +e.target.value; buildDays(); changed(); }));
+["dayStart", "dayEnd"].forEach(id => $(id).addEventListener("change", e => { if (e.target.value) { S[id] = e.target.value; buildDays(); changed(); } }));
+["title", "subtitle"].forEach(id => $(id).addEventListener("input", e => { S[id] = e.target.value; changed(); }));
+$("layout").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; S.layout = b.dataset.k; Kit.press($("layout"), S.layout); changed(); });
+$("hideBusy").addEventListener("change", e => { S.hideBusy = e.target.checked; changed(); });
+$("watermark").addEventListener("change", e => { S.watermark = e.target.checked; changed(); });
+
+// ---------- сохранить и отправить ----------
+Kit.output({ download: $("download"), share: $("share"), status: $("status") }, canvas, draw,
+  () => `Окошки_${Kit.safeName(prof.master)}_${S.start}.png`,
+  () => {
+    const err = Kit.profileError(prof) || (dates().some(d => intervals(d).length) ? "" : "Отметьте свободное время хотя бы в одном дне.");
+    if (err) { tabs.show("content"); contacts.focus(err.includes("имя") ? "master" : err.includes("телефон") ? "phone" : ""); }
+    return err;
+  });
+
+// ---------- старт ----------
+$("start").value = S.start; $("start").min = toIso(new Date());
+["ndays", "step", "minLen"].forEach(id => $(id).value = String(S[id]));
+["dayStart", "dayEnd", "title", "subtitle"].forEach(id => $(id).value = S[id]);
+$("hideBusy").checked = S.hideBusy; $("watermark").checked = S.watermark; Kit.press($("layout"), S.layout);
+buildDays(); tabs.show(tabs.current); changed();
+Promise.all([...fonts.fontsInUse(), '600 84px "Cormorant Garamond"', '128px "Marck Script"', '600 30px "Montserrat"'].map(f => document.fonts.load(f, "Свободные окошки 0123456789")))
+  .catch(() => {}).then(() => { changed(); if (tabs.current === "design") design.show(); });
+</script>
+</body>
+</html>
