@@ -274,12 +274,13 @@
   }
 
   // «Дизайн»: формат, категории фонов и миниатюры; state.theme / state.format
-  function designPanel(root, state, onChange) {
-    root.innerHTML = `<section class="group"><h2>Формат</h2><div class="seg" data-role="formats"></div></section>
+  function designPanel(root, state, onChange, opts = {}) {
+    const formats = opts.formats || FORMATS;                    // у сертификата один свой формат — выбор не показываем
+    root.innerHTML = `<section class="group" ${Object.keys(formats).length < 2 ? "hidden" : ""}><h2>Формат</h2><div class="seg" data-role="formats"></div></section>
       <section class="group"><h2>Фон</h2><div class="cats" data-role="cats"></div><div class="thumbs" data-role="thumbs"></div><span class="hint" data-role="name"></span></section>`;
     const $r = r => root.querySelector(`[data-role="${r}"]`);
     let cat = (Kit.CATS.find(c => c.items.some(t => t.id === state.theme)) || Kit.CATS[0]).id;
-    $r("formats").innerHTML = Object.entries(FORMATS).map(([k, f]) => `<button type="button" data-k="${k}">${f.name}</button>`).join("");
+    $r("formats").innerHTML = Object.entries(formats).map(([k, f]) => `<button type="button" data-k="${k}">${f.name}</button>`).join("");
     press($r("formats"), state.format);
     $r("cats").innerHTML = Kit.CATS.map(c => `<button type="button" class="chip" data-k="${c.id}">${c.name} <span>${c.items.length}</span></button>`).join("");
     press($r("cats"), cat);
@@ -361,57 +362,84 @@
     return { refresh: build, fontsInUse: () => items.map(({ k }) => fontOf(styleFn(k), 40)) };
   }
 
-  // «Мастер и контакты»: общий профиль для всех разделов
+  // какие контакты заполнены в кабинете: WhatsApp — по галочке (номер берётся основной, если свой не указан), остальные — по значению
+  const avail = (prof, k) => k === "email" ? !!(prof.email || "").trim() : k === "wa" ? !!prof.soc.wa.on : !!prof.soc[k].val.trim();
+  const SHOW = [...SOCIALS, { k: "email", name: "Почта" }];
+  // выбор раздела «что показать на картинке»; по умолчанию — всё, что заполнено в кабинете
+  function defaultShow(prof) {
+    const sel = { layout: prof.socLayout || "row", qr: prof.qr || "none", qrUrl: prof.qrUrl || "" };
+    SHOW.forEach(({ k }) => sel[k] = k === "email" ? !!prof.showEmail && avail(prof, k) : avail(prof, k));
+    return sel;
+  }
+  // профиль, каким его видит картинка раздела: только выбранные и заполненные контакты
+  function forSection(prof, sel) {
+    const soc = {};
+    SOCIALS.forEach(({ k }) => soc[k] = { on: !!sel[k] && avail(prof, k), val: prof.soc[k].val });
+    return { ...prof, soc, showEmail: !!sel.email && avail(prof, "email"), socLayout: sel.layout, qr: sel.qr, qrUrl: sel.qrUrl };
+  }
+
+  // кабинет: мастер и все контакты одним списком — заполняются один раз
   function contactsPanel(root, prof, onChange) {
     root.innerHTML = `<section class="group">
       <h2>Мастер и контакты</h2>
-      <span class="hint">Общие для всех разделов — заполняются один раз.</span>
+      <span class="hint">Заполняются один раз. В каждом разделе потом выбираете, что из этого показать на картинке.</span>
       <div class="field"><label for="k-master" class="req">Имя мастера</label><input id="k-master" type="text" maxlength="40" placeholder="Например, Лариса Чурилова"></div>
       <div class="field"><label for="k-phone" class="req">Телефон</label><input id="k-phone" type="tel" inputmode="tel" placeholder="+7 (999) 999-99-99" maxlength="18"></div>
-      <div class="field"><label for="k-email">Почта</label><input id="k-email" type="email" inputmode="email" autocomplete="email" placeholder="name@mail.ru">
-        <label class="check"><input type="checkbox" id="k-showEmail"> показывать почту на картинке</label></div>
-      <span class="lbl">Соцсети — любые или ни одной</span>
-      <div class="socchips" data-role="chips"></div>
-      <div class="svcs" data-role="socs"></div>
-      <div class="field"><span class="lbl">Соцсети на картинке</span>
-        <div class="seg" data-role="layout"><button type="button" data-k="row">В строку</button><button type="button" data-k="col">Столбиком</button></div></div>
-      <div class="field"><label for="k-qr">QR-код на картинке</label>
-        <select id="k-qr"><option value="none">Без QR-кода</option><option value="wa">WhatsApp</option><option value="tg">Telegram</option>
-        <option value="ig">Instagram</option><option value="max">MAX</option><option value="url">Своя ссылка</option></select></div>
-      <input id="k-qrUrl" type="url" placeholder="https://…" aria-label="Ссылка для QR-кода">
-      <span class="hint" data-role="qrHint"></span></section>`;
-    const $r = r => root.querySelector(`[data-role="${r}"]`), $i = id => root.querySelector("#k-" + id);
-    const changed = () => { saveProfile(prof); refresh(); onChange("profile"); };
-    function socs() {
-      $r("chips").innerHTML = SOCIALS.map(s => `<button type="button" class="chip" data-k="${s.k}" aria-pressed="${prof.soc[s.k].on}">${s.name}</button>`).join("");
-      $r("socs").innerHTML = SOCIALS.filter(s => prof.soc[s.k].on).map(s => `<div class="socin">
-          <label for="k-soc-${s.k}">${s.name}</label>
-          <input type="${s.k === "wa" ? "tel" : "text"}" id="k-soc-${s.k}" data-k="${s.k}" value="${esc(prof.soc[s.k].val)}" placeholder="${s.ph}" ${s.k === "wa" ? 'inputmode="tel" maxlength="18"' : ""}>
-        </div>`).join("");
-      press($r("layout"), prof.socLayout);
-    }
-    function refresh() { $i("qrUrl").hidden = prof.qr !== "url"; $r("qrHint").textContent = qrTarget(prof).need || ""; }
-    const deleting = e => (e.inputType || "").startsWith("delete");
-    $i("master").value = prof.master; $i("phone").value = prof.phone; $i("email").value = prof.email; $i("showEmail").checked = prof.showEmail;
-    $i("email").addEventListener("input", e => { prof.email = e.target.value; changed(); });
-    $i("showEmail").addEventListener("change", e => { prof.showEmail = e.target.checked; changed(); }); $i("qr").value = prof.qr; $i("qrUrl").value = prof.qrUrl;
+      <div class="field"><label for="k-email">Почта</label><input id="k-email" type="email" inputmode="email" autocomplete="email" placeholder="name@mail.ru"></div>
+      <span class="lbl">Соцсети — заполните те, что есть</span>
+      <div class="socin"><label class="check"><input type="checkbox" id="k-wa-on"> WhatsApp</label>
+        <input type="tel" id="k-soc-wa" data-k="wa" inputmode="tel" maxlength="18" placeholder="номер, если не тот же"></div>
+      <div class="socin"><label for="k-soc-tg">Telegram</label><input type="text" id="k-soc-tg" data-k="tg" placeholder="@ник или t.me/…"></div>
+      <div class="socin"><label for="k-soc-ig">Instagram</label><input type="text" id="k-soc-ig" data-k="ig" placeholder="@ник"></div>
+      <div class="socin"><label for="k-soc-max">MAX</label><input type="text" id="k-soc-max" data-k="max" placeholder="ссылка на профиль или номер"></div>
+    </section>`;
+    const $i = id => root.querySelector("#k-" + id), deleting = e => (e.inputType || "").startsWith("delete");
+    const changed = () => { saveProfile(prof); onChange("profile"); };
+    $i("master").value = prof.master; $i("phone").value = prof.phone; $i("email").value = prof.email; $i("wa-on").checked = prof.soc.wa.on;
+    SOCIALS.forEach(({ k }) => $i("soc-" + k).value = prof.soc[k].val);
     $i("master").addEventListener("input", e => { prof.master = e.target.value; changed(); });
     $i("phone").addEventListener("input", e => { e.target.value = maskPhone(e.target.value, deleting(e)); prof.phone = e.target.value; changed(); });
-    $i("qr").addEventListener("change", e => { prof.qr = e.target.value; changed(); if (prof.qr === "url") $i("qrUrl").focus(); });
-    $i("qrUrl").addEventListener("input", e => { prof.qrUrl = e.target.value; changed(); });
-    $r("chips").addEventListener("click", e => {
-      const b = e.target.closest("[data-k]"); if (!b) return;
-      const k = b.dataset.k; prof.soc[k].on = !prof.soc[k].on; socs(); changed();
-      if (prof.soc[k].on) $i("soc-" + k).focus();
-    });
-    $r("socs").addEventListener("input", e => {
+    $i("email").addEventListener("input", e => { prof.email = e.target.value; changed(); });
+    $i("wa-on").addEventListener("change", e => { prof.soc.wa.on = e.target.checked; changed(); });
+    root.addEventListener("input", e => {
       const k = e.target.dataset.k; if (!k) return;
-      if (k === "wa") e.target.value = maskPhone(e.target.value, deleting(e));
+      if (k === "wa") { e.target.value = maskPhone(e.target.value, deleting(e)); if (e.target.value) { prof.soc.wa.on = true; $i("wa-on").checked = true; } }
+      else prof.soc[k].on = !!e.target.value.trim();
       prof.soc[k].val = e.target.value; changed();
     });
-    $r("layout").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; prof.socLayout = b.dataset.k; press($r("layout"), prof.socLayout); changed(); });
-    socs(); refresh();
     return { focus: id => { const el = $i(id); if (el) el.focus(); } };
+  }
+
+  // раздел: мастер и телефон — из кабинета; здесь выбираем, какие контакты и какой QR будут на картинке
+  function showPanel(root, prof, sel, onChange, cabinetUrl = "../") {
+    root.innerHTML = `<section class="group">
+      <h2>Контакты на картинке</h2>
+      <div class="hint" data-role="who"></div>
+      <div class="socchips" data-role="chips"></div>
+      <div class="field"><span class="lbl">Соцсети на картинке</span>
+        <div class="seg" data-role="layout"><button type="button" data-k="row">В строку</button><button type="button" data-k="col">Столбиком</button></div></div>
+      <div class="field"><label>QR-код на картинке<select data-role="qr" style="margin-top:6px"></select></label></div>
+      <input data-role="qrUrl" type="url" placeholder="https://…" aria-label="Ссылка для QR-кода">
+      <span class="hint" data-role="qrHint"></span></section>`;
+    const $r = r => root.querySelector(`[data-role="${r}"]`);
+    function build() {
+      $r("who").innerHTML = `${esc(prof.master.trim() || "Имя не указано")} · ${esc(fmtPhone(prof.phone) || "телефон не указан")} — <a href="${cabinetUrl}">изменить в кабинете</a>`;
+      $r("chips").innerHTML = SHOW.map(({ k, name }) => avail(prof, k)
+        ? `<button type="button" class="chip" data-k="${k}" aria-pressed="${!!sel[k]}">${name}</button>`
+        : `<button type="button" class="chip" disabled title="Не заполнено в кабинете" style="opacity:.45">${name}</button>`).join("");
+      $r("qr").innerHTML = `<option value="none">Без QR-кода</option>` + SOCIALS.filter(({ k }) => avail(prof, k)).map(({ k, name }) => `<option value="${k}">${name}</option>`).join("") + `<option value="url">Своя ссылка</option>`;
+      $r("qr").value = [...$r("qr").options].some(o => o.value === sel.qr) ? sel.qr : "none";
+      $r("qrUrl").value = sel.qrUrl; press($r("layout"), sel.layout);
+      refresh();
+    }
+    function refresh() { $r("qrUrl").hidden = sel.qr !== "url"; $r("qrHint").textContent = qrTarget(forSection(prof, sel)).need || ""; }
+    const changed = () => { refresh(); onChange("show"); };
+    $r("chips").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; sel[b.dataset.k] = !sel[b.dataset.k]; b.setAttribute("aria-pressed", sel[b.dataset.k]); changed(); });
+    $r("layout").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; sel.layout = b.dataset.k; press($r("layout"), sel.layout); changed(); });
+    $r("qr").addEventListener("change", e => { sel.qr = e.target.value; changed(); if (sel.qr === "url") $r("qrUrl").focus(); });
+    $r("qrUrl").addEventListener("input", e => { sel.qrUrl = e.target.value; changed(); });
+    build();
+    return { focus() { root.scrollIntoView({ block: "center" }); }, refresh: build };
   }
 
   // кнопки «Скачать» и «Отправить»
@@ -438,8 +466,8 @@
   }
   // общая проверка профиля перед сохранением картинки; возвращает текст ошибки или ""
   function profileError(prof) {
-    if (!prof.master.trim()) return "Укажите имя мастера.";
-    if (!normPhone(prof.phone)) return "Укажите телефон полностью: +7 (999) 999-99-99.";
+    if (!prof.master.trim()) return "Укажите имя мастера в кабинете.";
+    if (!normPhone(prof.phone)) return "Укажите в кабинете телефон полностью: +7 (999) 999-99-99.";
     return "";
   }
   const safeName = s => s.trim().replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, "_") || "мастер";
@@ -450,6 +478,6 @@
     W, SCALE, FORMATS, FONTS, SCRIPTS, SOCIALS, store, loadJSON, esc,
     digits, normPhone, fmtPhone, maskPhone, group, socText, qrTarget, loadProfile, saveProfile,
     baseStyle, styleOf, fontOf, caseOf, painter, header, footer, press,
-    tabs, designPanel, fontsPanel, contactsPanel, output, profileError, safeName, PRESET,
+    tabs, designPanel, fontsPanel, contactsPanel, showPanel, defaultShow, forSection, output, profileError, safeName, PRESET,
   });
 })();
