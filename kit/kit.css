@@ -154,3 +154,7 @@ details.month > .days { padding-bottom: 14px; }
   .thumbs { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
   .slot { height: 38px; }
 }
+/* фон, уже выбранный в другом разделе */
+.thumb.taken { cursor: not-allowed; position: relative; }
+.thumb.taken canvas { opacity: .35; }
+.thumb.taken::after { content: attr(data-taken); position: absolute; left: 4px; right: 4px; bottom: 6px; font-size: 10px; line-height: 1.2; text-align: center; color: var(--text); background: var(--panel); border-radius: 6px; padding: 3px 2px; }

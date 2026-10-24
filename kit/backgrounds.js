@@ -390,7 +390,159 @@
       c.fillStyle = paintOn(c, t.accent, 0, W);
       [[36, 36], [W - 36, 36], [36, H - 36], [W - 36, H - 36]].forEach(([x, y]) => { c.save(); c.translate(x, y); c.rotate(Math.PI / 4); c.fillRect(-16, -16, 32, 32); c.restore(); });
     },
+    // ---- только для прайса ----
+    tools(c, W, H, r, t) {                                      // бьюти-инструменты контуром
+      const spots = t.v ? [...Array.from({ length: 7 }, (_, i) => [90 + i * (W - 180) / 6, 62, i % 2 ? .3 : -.3]), ...Array.from({ length: 7 }, (_, i) => [90 + i * (W - 180) / 6, H - 58, i % 2 ? -.3 : .3])]
+        : [[70, 70, -.5], [170, 46, .4], [W - 70, 72, .5], [W - 170, 44, -.4], [70, H - 66, .5], [180, H - 44, -.3], [W - 70, H - 66, -.5], [W - 180, H - 42, .3]];
+      c.strokeStyle = A(t.acc, .6); c.fillStyle = A(t.acc, .6); c.lineWidth = 2.6; c.lineCap = "round"; c.lineJoin = "round";
+      spots.forEach(([x, y, a], i) => { c.save(); c.translate(x, y); c.rotate(a); TOOL[i % TOOL.length](c, t.v ? 22 : 30); c.restore(); });
+    },
+    ruled(c, W, H, r, t) {                                      // тетрадная линовка
+      c.fillStyle = A(t.ink, .07); for (let y = 140; y < H - 40; y += 54) c.fillRect(40, y, W - 80, 1.5);
+      c.fillStyle = A(t.acc, .45); c.fillRect(72, 0, 2, H);
+    },
+    scallop(c, W, H, r, t) {                                    // фестончатая рамка
+      c.strokeStyle = t.acc; c.lineWidth = 2; const R = 14, m = 34;
+      for (let x = m + R; x < W - m; x += R * 2) { c.beginPath(); c.arc(x, m, R, Math.PI, 0); c.stroke(); c.beginPath(); c.arc(x, H - m, R, 0, Math.PI); c.stroke(); }
+      for (let y = m + R; y < H - m; y += R * 2) { c.beginPath(); c.arc(m, y, R, Math.PI / 2, Math.PI * 1.5); c.stroke(); c.beginPath(); c.arc(W - m, y, R, -Math.PI / 2, Math.PI / 2); c.stroke(); }
+    },
+    tags(c, W, H, r, t) {                                       // ценники в углах
+      const tag = (x, y, a, s) => {
+        c.save(); c.translate(x, y); c.rotate(a); c.strokeStyle = t.acc; c.lineWidth = 2.4; c.fillStyle = A(t.acc, .12);
+        c.beginPath(); c.moveTo(0, 0); c.lineTo(s * .35, -s * .32); c.lineTo(s * 1.4, -s * .32); c.lineTo(s * 1.4, s * .32); c.lineTo(s * .35, s * .32); c.closePath(); c.fill(); c.stroke();
+        c.beginPath(); c.arc(s * .32, 0, s * .07, 0, Math.PI * 2); c.stroke();
+        c.beginPath(); c.moveTo(s * .25, 0); c.quadraticCurveTo(-s * .2, -s * .3, -s * .5, -s * .1); c.stroke(); c.restore();
+      };
+      tag(40, 66, -.35, 80); tag(W - 40, H - 60, Math.PI - .35, 80); if (t.v) { tag(W - 210, 46, .25, 56); tag(210, H - 44, Math.PI + .25, 56); }
+    },
+    twoTone(c, W, H, r, t) {                                    // цветная полоса слева и точки в углу
+      c.fillStyle = A(t.acc, .9); c.fillRect(0, 0, 34, H); c.fillRect(46, 0, 2, H);
+      c.fillStyle = A(t.acc, .35); for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) { c.beginPath(); c.arc(W - 50 - i * 22, 40 + j * 22, 3.5, 0, Math.PI * 2); c.fill(); }
+    },
+    bands(c, W, H, r, t) {                                      // полосы сверху и снизу с тонкой линией
+      const h = H > 1500 ? 70 : 44;
+      c.fillStyle = A(t.acc, .85); c.fillRect(0, 0, W, h); c.fillRect(0, H - h, W, h);
+      c.fillStyle = A(t.acc, .5); c.fillRect(0, h + 10, W, 2); c.fillRect(0, H - h - 12, W, 2);
+    },
+    // ---- только для окошек ----
+    clocks(c, W, H, r, t) {
+      const pts = t.v ? edgePts(r, 10, W, H).map(([x, y]) => [x, y, 22 + r() * 22]) : [[70, 70, 48], [W - 76, H - 76, 54], [W - 58, 58, 28], [56, H - 62, 30]];
+      pts.forEach(([x, y, R]) => CLOCK(c, x, y, R, A(t.acc, .65), r));
+    },
+    calgrid(c, W, H, r, t) {                                    // листки-календари в углах
+      const cal = (x, y, cell) => {
+        c.strokeStyle = A(t.acc, .5); c.lineWidth = 1.5; c.fillStyle = A(t.acc, .75);
+        c.fillRect(x, y, cell * 7, cell * .9);
+        for (let i = 0; i < 4; i++) for (let j = 0; j < 7; j++) {
+          c.strokeRect(x + j * cell, y + cell + i * cell, cell, cell);
+          if ((i * 7 + j) % 9 === 4) { c.fillStyle = A(t.acc, .45); c.fillRect(x + j * cell + 3, y + cell + i * cell + 3, cell - 6, cell - 6); }
+        }
+      };
+      cal(W - 36 - 7 * 16, 24, 16); cal(36, H - 24 - 5 * 16, 16);
+    },
+    hourglass(c, W, H, r, t) {
+      const hg = (x, y, s, a) => {
+        c.save(); c.translate(x, y); c.rotate(a); c.strokeStyle = A(t.acc, .7); c.lineWidth = 2.4; c.fillStyle = A(t.acc, .35);
+        c.beginPath(); c.moveTo(-s * .5, -s); c.lineTo(s * .5, -s); c.moveTo(-s * .5, s); c.lineTo(s * .5, s); c.stroke();
+        c.beginPath(); c.moveTo(-s * .4, -s); c.quadraticCurveTo(-s * .4, -s * .2, 0, 0); c.quadraticCurveTo(s * .4, -s * .2, s * .4, -s);
+        c.moveTo(-s * .4, s); c.quadraticCurveTo(-s * .4, s * .2, 0, 0); c.quadraticCurveTo(s * .4, s * .2, s * .4, s); c.stroke();
+        c.beginPath(); c.moveTo(-s * .3, s * .95); c.quadraticCurveTo(0, s * .45, s * .3, s * .95); c.closePath(); c.fill(); c.restore();
+      };
+      hg(58, 62, 36, -.25); hg(W - 58, H - 62, 40, .25); if (t.v) { hg(W - 64, 60, 24, .3); hg(64, H - 58, 24, -.3); }
+    },
+    dial(c, W, H, r, t) {                                       // большой циферблат, выглядывающий из угла
+      [[W + 60, -60, 210], [-50, H + 50, 180]].forEach(([x, y, R]) => {
+        c.strokeStyle = A(t.acc, .6); c.lineWidth = 2; c.beginPath(); c.arc(x, y, R, 0, Math.PI * 2); c.stroke();
+        for (let i = 0; i < 60; i++) {
+          const a = i / 60 * Math.PI * 2, l = i % 5 ? 10 : 24; c.lineWidth = i % 5 ? 1.5 : 3;
+          c.beginPath(); c.moveTo(x + Math.cos(a) * (R - 6), y + Math.sin(a) * (R - 6)); c.lineTo(x + Math.cos(a) * (R - 6 - l), y + Math.sin(a) * (R - 6 - l)); c.stroke();
+        }
+      });
+    },
+    sunMoon(c, W, H, r, t) {                                    // утро и вечер
+      c.fillStyle = A(t.acc, .55); c.beginPath(); c.arc(62, 62, 26, 0, Math.PI * 2); c.fill();
+      c.strokeStyle = A(t.acc, .55); c.lineWidth = 3; c.lineCap = "round";
+      for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; c.beginPath(); c.moveTo(62 + Math.cos(a) * 34, 62 + Math.sin(a) * 34); c.lineTo(62 + Math.cos(a) * 46, 62 + Math.sin(a) * 46); c.stroke(); }
+      c.save(); c.beginPath(); c.arc(W - 66, H - 66, 30, 0, Math.PI * 2); c.arc(W - 52, H - 78, 26, 0, Math.PI * 2, true); c.fillStyle = A(t.acc, .6); c.fill("evenodd"); c.restore();
+      c.fillStyle = A(t.acc, .5); [[W - 130, H - 44, 3], [W - 112, H - 100, 2], [W - 36, H - 128, 2.5]].forEach(([x, y, s]) => { c.beginPath(); c.arc(x, y, s, 0, Math.PI * 2); c.fill(); });
+    },
+    pages(c, W, H, r, t) {                                      // отрывные листки с числами
+      const page = (x, y, n, a) => {
+        c.save(); c.translate(x, y); c.rotate(a); c.fillStyle = A(t.dark ? "#ffffff" : t.acc, .08); c.strokeStyle = A(t.acc, .6); c.lineWidth = 2;
+        rr(c, -36, -32, 72, 74, 10); c.fill(); c.stroke(); c.fillStyle = A(t.acc, .7); c.fillRect(-36, -32, 72, 16);
+        [-18, 0, 18].forEach(dx => { c.beginPath(); c.arc(dx, -34, 4, 0, Math.PI * 2); c.stroke(); });
+        c.font = '600 30px "Montserrat"'; c.textAlign = "center"; c.fillText(String(n), 0, 30); c.restore();
+      };
+      page(62, 66, 7, -.2); page(W - 66, H - 64, 21, .18); if (t.v) { page(W - 66, 62, 14, .15); page(66, H - 62, 28, -.15); }
+    },
+    // ---- только для сертификатов ----
+    bow(c, W, H, r, t) {                                        // лента через угол с бантом
+      const [x, y, s] = t.v ? [0, H, -1] : [W, 0, 1];
+      c.strokeStyle = A(t.acc, .85); c.lineWidth = 20; c.lineCap = "butt";
+      c.beginPath(); c.moveTo(x - s * 230, y); c.lineTo(x, y + s * 230); c.stroke();
+      c.beginPath(); c.moveTo(x - s * 270, y + s * 40); c.lineTo(x - s * 40, y + s * 270); c.stroke();
+      const bx = x - s * 135, by = y + s * 135; c.fillStyle = A(t.acc, .95);
+      [-1, 1].forEach(k => { c.save(); c.translate(bx, by); c.rotate(-s * Math.PI / 4 + k * .9); c.beginPath(); c.ellipse(34, 0, 36, 17, 0, 0, Math.PI * 2); c.fill(); c.restore(); });
+      c.beginPath(); c.arc(bx, by, 13, 0, Math.PI * 2); c.fill();
+    },
+    guilloche(c, W, H, r, t) {                                  // гильош, как на банкнотах
+      c.strokeStyle = A(t.acc, .45); c.lineWidth = .9;
+      const rose = (x, y, R, k) => { c.beginPath(); for (let a = 0; a <= Math.PI * 14 + .01; a += .02) { const q = R * (.62 + .38 * Math.cos(k * a / 7)); c.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q); } c.stroke(); };
+      [[0, 0], [W, 0], [0, H], [W, H]].forEach(([x, y]) => rose(x, y, 150, 12));
+      c.strokeStyle = A(t.acc, .7); c.lineWidth = 1.2; c.strokeRect(40, 40, W - 80, H - 80); c.strokeRect(48, 48, W - 96, H - 96);
+    },
+    giftbox(c, W, H, r, t) {
+      const box = (x, y, s, a) => {
+        c.save(); c.translate(x, y); c.rotate(a); c.strokeStyle = A(t.acc, .75); c.lineWidth = 2.4; c.fillStyle = A(t.acc, .12);
+        c.fillRect(-s, -s * .6, s * 2, s * 1.4); c.strokeRect(-s, -s * .6, s * 2, s * 1.4); c.strokeRect(-s * 1.1, -s * .9, s * 2.2, s * .35);
+        c.beginPath(); c.moveTo(0, -s * .9); c.lineTo(0, s * .8); c.stroke();
+        c.beginPath(); c.ellipse(-s * .3, -s * 1.05, s * .32, s * .16, -.4, 0, Math.PI * 2); c.stroke();
+        c.beginPath(); c.ellipse(s * .3, -s * 1.05, s * .32, s * .16, .4, 0, Math.PI * 2); c.stroke(); c.restore();
+      };
+      box(66, 76, 30, -.2); box(W - 70, 80, 26, .2); box(64, H - 58, 26, .15); box(W - 68, H - 56, 30, -.15);
+    },
+    seal(c, W, H, r, t) {                                       // печать-медаль в углу и тонкая рамка
+      const [x, y] = t.v ? [W - 86, 86] : [86, 86];
+      c.fillStyle = A(t.acc, .85); c.beginPath();
+      for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2, R = i % 2 ? 50 : 58; c.lineTo(x + Math.cos(a) * R, y + Math.sin(a) * R); }
+      c.closePath(); c.fill();
+      c.strokeStyle = t.dark ? t.b : "#ffffff"; c.lineWidth = 2; c.beginPath(); c.arc(x, y, 39, 0, Math.PI * 2); c.stroke();
+      c.fillStyle = t.dark ? t.b : "#ffffff"; c.beginPath();
+      for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, R = i % 2 ? 8 : 20; c.lineTo(x + Math.cos(a) * R, y + Math.sin(a) * R); }
+      c.closePath(); c.fill();
+      c.strokeStyle = A(t.acc, .6); c.lineWidth = 1.2; c.strokeRect(24, 24, W - 48, H - 48);
+    },
+    ribbonFrame(c, W, H, r, t) {                                // рамка-лента с загнутыми углами
+      c.strokeStyle = paintOn(c, t.accent, 0, W); c.lineWidth = 14; c.strokeRect(40, 40, W - 80, H - 80);
+      c.fillStyle = paintOn(c, t.accent, 0, W);
+      [[33, 33, 1, 1], [W - 33, 33, -1, 1], [33, H - 33, 1, -1], [W - 33, H - 33, -1, -1]].forEach(([x, y, sx, sy]) => { c.beginPath(); c.moveTo(x, y); c.lineTo(x + sx * 46, y); c.lineTo(x, y + sy * 46); c.closePath(); c.fill(); });
+    },
+    streamers(c, W, H, r, t) {                                  // серпантин и золотые точки
+      edgePts(r, 60, W, H).forEach(([x, y]) => { c.fillStyle = paintOn(c, t.accent, x - 6, x + 6); c.beginPath(); c.arc(x, y, 2 + r() * 5, 0, Math.PI * 2); c.fill(); });
+      c.lineWidth = 3; c.lineCap = "round";
+      [[40, 30], [W - 40, 30], [40, H - 30], [W - 40, H - 30]].forEach(([x, y], i) => {
+        c.strokeStyle = A(solid(t.cols[i % t.cols.length]), .8); c.beginPath(); c.moveTo(x, y);
+        for (let k = 1; k < 14; k++) c.lineTo(x + Math.sin(k * .9) * 14 + (i % 2 ? -k * 6 : k * 6), y + (y < H / 2 ? k * 3 : -k * 3));
+        c.stroke();
+      });
+    },
   };
+  // контурные бьюти-инструменты для узора «инструменты»
+  const TOOL = [
+    (c, s) => { c.beginPath(); c.arc(-s * .55, s * .55, s * .22, 0, Math.PI * 2); c.stroke(); c.beginPath(); c.arc(s * .55, s * .55, s * .22, 0, Math.PI * 2); c.stroke(); c.beginPath(); c.moveTo(-s * .4, s * .38); c.lineTo(s * .3, -s); c.moveTo(s * .4, s * .38); c.lineTo(-s * .3, -s); c.stroke(); },   // ножницы
+    (c, s) => { c.strokeRect(-s, -s * .25, s * 2, s * .3); for (let i = 0; i < 9; i++) { c.beginPath(); c.moveTo(-s * .9 + i * s * .225, s * .05); c.lineTo(-s * .9 + i * s * .225, s * .5); c.stroke(); } },   // расчёска
+    (c, s) => { c.beginPath(); c.moveTo(0, s); c.lineTo(0, -s * .1); c.stroke(); c.strokeRect(-s * .12, -s * .35, s * .24, s * .25); c.beginPath(); c.ellipse(0, -s * .62, s * .2, s * .32, 0, 0, Math.PI * 2); c.fill(); },   // кисть
+    (c, s) => { rr(c, -s * .4, -s * .2, s * .8, s, s * .15); c.stroke(); c.fillRect(-s * .15, -s * .75, s * .3, s * .55); },   // лак
+    (c, s) => { c.beginPath(); c.moveTo(0, s); c.lineTo(0, -s * .3); c.stroke(); for (let i = 0; i < 6; i++) { c.beginPath(); c.moveTo(-s * .18, -s * .35 - i * s * .11); c.lineTo(s * .18, -s * .35 - i * s * .11); c.stroke(); } },   // щёточка для ресниц
+    (c, s) => { c.beginPath(); c.arc(0, -s * .3, s * .5, 0, Math.PI * 2); c.stroke(); c.beginPath(); c.moveTo(0, s * .2); c.lineTo(0, s); c.stroke(); },   // зеркальце
+  ];
+  function CLOCK(c, x, y, R, col, r) {
+    c.strokeStyle = col; c.lineWidth = Math.max(1.5, R / 16); c.lineCap = "round";
+    c.beginPath(); c.arc(x, y, R, 0, Math.PI * 2); c.stroke();
+    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; c.beginPath(); c.moveTo(x + Math.cos(a) * R * .78, y + Math.sin(a) * R * .78); c.lineTo(x + Math.cos(a) * R * .9, y + Math.sin(a) * R * .9); c.stroke(); }
+    const h = r() * Math.PI * 2, m = r() * Math.PI * 2;
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(h) * R * .45, y + Math.sin(h) * R * .45); c.moveTo(x, y); c.lineTo(x + Math.cos(m) * R * .7, y + Math.sin(m) * R * .7); c.stroke();
+  }
 
   const DECOR_NAMES = { corners: "уголки", frame2: "двойная рамка", frame1: "рамка", cornersThin: "тонкие уголки", deco: "ар-деко", stars: "звёзды",
     arcLine: "арка", sideLines: "линии", blobs: "круги", waves: "волны", arch: "арка", dotsSoft: "конфетти", circleBig: "солнце", organic: "пятна",
@@ -398,7 +550,10 @@
     lavender: "лаванда", leavesFrame: "листья", branch: "ветка", mesh: "градиент", wavesBold: "волны", terrazzo: "терраццо", arcs: "кольца",
     strokes: "мазки", shapes: "геометрия", marble: "мрамор", linen: "лён", grainPaper: "бумага", velvet: "бархат", terrazzoFine: "терраццо",
     autumn: "листопад", winter: "снежинки", spring: "цветение", summer: "солнце", newyear: "Новый год", hearts: "сердечки", tulips: "тюльпаны",
-    balloons: "шары", sale: "акция", watercolor: "акварель", glitter: "блёстки", bokeh: "боке", sequins: "пайетки", foilFrame: "фольга" };
+    balloons: "шары", sale: "акция", watercolor: "акварель", glitter: "блёстки", bokeh: "боке", sequins: "пайетки", foilFrame: "фольга",
+    tools: "инструменты", ruled: "линовка", scallop: "фестоны", tags: "ценники", twoTone: "полоса", bands: "ленты",
+    clocks: "часы", calgrid: "календарики", hourglass: "песочные часы", dial: "циферблат", sunMoon: "утро и вечер", pages: "листки",
+    bow: "бант", guilloche: "гильош", giftbox: "подарки", seal: "печать", ribbonFrame: "лента-рамка", streamers: "серпантин" };
 
   // ---------- сборка тем ----------
   function mk(o) {
@@ -417,15 +572,16 @@
   }
   const cats = [];
   // палитра × 3 узора; узоры перебираются со сдвигом, чтобы соседние палитры отличались
-  function gen(id, name, pals, decors, extra = () => ({})) {
+  function build(id, name, pals, decors, extra = () => ({}), per = 3) {
     const items = [];
-    pals.forEach((p, i) => [0, 1, 2].forEach(j => {
+    pals.forEach((p, i) => Array.from({ length: per }, (_, j) => j).forEach(j => {
       const decor = decors[(2 * i + j) % decors.length], k = items.length;
       const o = { ...p, decor, v: j, title: (i + j) % 2 ? "caps" : "script", ...extra(p, i, j, decor) };
       items.push(mk({ id: `${id}-${k}`, name: `${p.n} · ${o.decorName || DECOR_NAMES[o.decor]}`, ...o }));
     }));
-    cats.push({ id, name, items });
+    return { id, name, items };
   }
+  const gen = (...args) => cats.push(build(...args));
   const BUSY = new Set(["mesh", "terrazzo", "strokes"]);
 
   gen("lux", "Тёмные люкс", [
@@ -555,7 +711,46 @@
     { n: "Карамель", a: "#3b2414", b: "#160c05", ink: "#f8ecdf", accent: "gold", cols: ["#d9a066", "#e0c78e", "#a86b3a"], dark: true, radial: true }],
     ["glitter", "bokeh", "sequins", "foilFrame"]);
 
-  const THEMES = Object.fromEntries(cats.flatMap(c => c.items.map(t => [t.id, t])));
+  // по 20 уникальных фонов на раздел: показываются только в своём разделе
+  const OWN = {
+    price: build("price", "✦ Только для прайса", [
+      { n: "Чёрный", a: "#211c17", b: "#0b0a09", ink: "#efe6d6", accent: "gold", dark: true, radial: true },
+      { n: "Пудра", a: "#fbefec", b: "#f0d8d3", ink: "#5a3d42", accent: "#a8636f" },
+      { n: "Слоновая кость", a: "#f7f1e6", b: "#ece2d0", ink: "#2b2620", accent: "#8a6a3e" },
+      { n: "Изумруд", a: "#1d3a30", b: "#0a1712", ink: "#e8f0ea", accent: "gold", dark: true, radial: true },
+      { n: "Беж", a: "#ede4d8", b: "#e2d4c2", ink: "#3b3027", accent: "#7a5a3c" },
+      { n: "Лаванда", a: "#f3effa", b: "#e2d8f1", ink: "#43385a", accent: "#7d68a8" },
+      { n: "Графит", a: "#2e2e30", b: "#121213", ink: "#ecebea", accent: "silver", dark: true, radial: true },
+      { n: "Мята", a: "#eef8f3", b: "#d6ede2", ink: "#2f4a3e", accent: "#4f8a70" },
+      { n: "Бордо", a: "#40192a", b: "#17080e", ink: "#f5e7ec", accent: "rose", dark: true, radial: true },
+      { n: "Белый", a: "#fbfaf8", b: "#f1efeb", ink: "#1f1f1f", accent: "#1f1f1f" }],
+      ["tools", "ruled", "scallop", "tags", "twoTone", "bands"], () => ({}), 2),
+    windows: build("windows", "✦ Только для окошек", [
+      { n: "Небо", a: "#eef5fb", b: "#d7e7f4", ink: "#2d4257", accent: "#4f7aa3" },
+      { n: "Ночь", a: "#1f2a40", b: "#0c111c", ink: "#e9edf5", accent: "silver", dark: true, radial: true },
+      { n: "Персик", a: "#fff1e8", b: "#f8d9c4", ink: "#5b3f30", accent: "#c0714a" },
+      { n: "Шалфей", a: "#e8ede2", b: "#d6dfcd", ink: "#2e392b", accent: "#4f654a" },
+      { n: "Слива", a: "#36284d", b: "#15101d", ink: "#f1e8f7", accent: "gold", dark: true, radial: true },
+      { n: "Ваниль", a: "#fffaec", b: "#f6ead0", ink: "#56472b", accent: "#a07a2e" },
+      { n: "Голубика", a: "#f0f2fb", b: "#d9def3", ink: "#323a5c", accent: "#5a67a8" },
+      { n: "Шоколад", a: "#3a2a20", b: "#140d09", ink: "#f2e8de", accent: "gold", dark: true, radial: true },
+      { n: "Пудра", a: "#fbefec", b: "#f0d8d3", ink: "#5a3d42", accent: "#a8636f" },
+      { n: "Белый", a: "#fbfaf8", b: "#f0eeea", ink: "#232323", accent: "#3a3a3a" }],
+      ["clocks", "calgrid", "hourglass", "dial", "sunMoon", "pages"], () => ({}), 2),
+    certs: build("certs", "✦ Только для сертификатов", [
+      { n: "Чёрное золото", a: "#211c17", b: "#0b0a09", ink: "#efe6d6", accent: "gold", dark: true, radial: true, cols: ["#c9a960", "#e0c78e", "#8a6e3a"] },
+      { n: "Бордо", a: "#4a1225", b: "#1c050d", ink: "#fbecf0", accent: "gold", dark: true, radial: true, cols: ["#c9a960", "#e3a998", "#f0c4b4"] },
+      { n: "Изумруд", a: "#163a30", b: "#071712", ink: "#eef5f1", accent: "gold", dark: true, radial: true, cols: ["#c9a960", "#4fa384", "#e0c78e"] },
+      { n: "Шампань", a: "#f7efe2", b: "#ecdcc4", ink: "#3a2e20", accent: "gold", cols: ["#c9a960", "#e8c99a", "#b08a3e"] },
+      { n: "Розовая пудра", a: "#fbefec", b: "#f2d9d2", ink: "#4a2e2a", accent: "rose", cols: ["#d39a88", "#f0c4b4", "#b37766"] },
+      { n: "Сапфир", a: "#1a2550", b: "#080d22", ink: "#eef1fb", accent: "silver", dark: true, radial: true, cols: ["#c3c7cc", "#6f86d6", "#eceff2"] },
+      { n: "Жемчуг", a: "#fbfaf8", b: "#eeebe6", ink: "#2e2c2a", accent: "silver", cols: ["#aab0b8", "#d8dde6", "#e6d8dc"] },
+      { n: "Слива", a: "#2f1d45", b: "#120a1d", ink: "#f4ecfb", accent: "rose", dark: true, radial: true, cols: ["#e3a998", "#c3a6e8", "#f0c4b4"] },
+      { n: "Крем", a: "#fbf6ec", b: "#f0e4cf", ink: "#3e3527", accent: "gold", cols: ["#c9a960", "#d9b8a0", "#b08a3e"] },
+      { n: "Шоколад", a: "#3b2414", b: "#160c05", ink: "#f8ecdf", accent: "rose", dark: true, radial: true, cols: ["#e3a998", "#d9a066", "#f0c4b4"] }],
+      ["bow", "guilloche", "giftbox", "seal", "ribbonFrame", "streamers"], () => ({}), 2),
+  };
+  const THEMES = Object.fromEntries([...cats, ...Object.values(OWN)].flatMap(c => c.items.map(t => [t.id, t])));
 
   function drawBg(c, t, W, H) {
     let g;
@@ -566,5 +761,5 @@
     if (t.panel) { c.fillStyle = t.panel; rr(c, 56, 56, W - 112, H - 112, 30); c.fill(); }
   }
 
-  Object.assign(Kit, { CATS: cats, THEMES, DECOR, drawBg });
+  Object.assign(Kit, { CATS: cats, OWN, THEMES, DECOR, drawBg });
 })();

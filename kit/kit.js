@@ -262,9 +262,9 @@
   const press = (box, key) => box.querySelectorAll("[data-k]").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === key));
 
   function tabs(nav, storeKey, onShow) {                        // вкладки: кнопки data-tab в nav, панели .tab[data-tab]
-    let cur = store.get(storeKey) || nav.querySelector("[data-tab]").dataset.tab;
+    let cur = nav.querySelector("[data-tab]").dataset.tab;      // при переходе между разделами всегда открывается первая вкладка
     function show(name) {
-      cur = name; store.set(storeKey, name);
+      cur = name;
       nav.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name));
       document.querySelectorAll(".tab").forEach(s => s.hidden = s.dataset.tab !== name);
       onShow && onShow(name);
@@ -273,22 +273,41 @@
     return { show, get current() { return cur; } };
   }
 
+  // разделы и их сохранённые настройки; при споре за фон уступает раздел с меньшим приоритетом
+  const SECTIONS = { certs: { key: "certs.v1", name: "Сертификатах" }, price: { key: "price.v1", name: "Прайс-листе" }, windows: { key: "windows.v1", name: "Свободных окошках" } };
+  const PRIORITY = ["certs", "price", "windows"];
+  function takenThemes(self) {                                  // фон → раздел, где он уже выбран (кроме своего)
+    const out = {};
+    PRIORITY.forEach(id => { if (id === self) return; const st = loadJSON(SECTIONS[id].key); if (st && st.theme) out[st.theme] = { id, name: SECTIONS[id].name }; });
+    return out;
+  }
+  // фон раздела занят разделом поважнее (было до правила «один фон — один раздел») — берём первый свой уникальный
+  function claimTheme(self, state) {
+    const owner = takenThemes(self)[state.theme];
+    if (owner && PRIORITY.indexOf(owner.id) < PRIORITY.indexOf(self)) state.theme = Kit.OWN[self].items[0].id;
+  }
+
   // «Дизайн»: формат, категории фонов и миниатюры; state.theme / state.format
   function designPanel(root, state, onChange, opts = {}) {
     const formats = opts.formats || FORMATS;                    // у сертификата один свой формат — выбор не показываем
     root.innerHTML = `<section class="group" ${Object.keys(formats).length < 2 ? "hidden" : ""}><h2>Формат</h2><div class="seg" data-role="formats"></div></section>
       <section class="group"><h2>Фон</h2><div class="cats" data-role="cats"></div><div class="thumbs" data-role="thumbs"></div><span class="hint" data-role="name"></span></section>`;
     const $r = r => root.querySelector(`[data-role="${r}"]`);
-    let cat = (Kit.CATS.find(c => c.items.some(t => t.id === state.theme)) || Kit.CATS[0]).id;
+    const CATS = opts.own ? [Kit.OWN[opts.own], ...Kit.CATS] : Kit.CATS;   // свои уникальные фоны раздела — первыми
+    let cat = (CATS.find(c => c.items.some(t => t.id === state.theme)) || CATS[0]).id, taken = {};
     $r("formats").innerHTML = Object.entries(formats).map(([k, f]) => `<button type="button" data-k="${k}">${f.name}</button>`).join("");
     press($r("formats"), state.format);
-    $r("cats").innerHTML = Kit.CATS.map(c => `<button type="button" class="chip" data-k="${c.id}">${c.name} <span>${c.items.length}</span></button>`).join("");
+    $r("cats").innerHTML = CATS.map(c => `<button type="button" class="chip" data-k="${c.id}">${c.name} <span>${c.items.length}</span></button>`).join("");
     press($r("cats"), cat);
-    const total = Kit.CATS.reduce((a, c) => a + c.items.length, 0);
+    const total = CATS.reduce((a, c) => a + c.items.length, 0);
     const name = () => $r("name").textContent = `Выбрано: ${(Kit.THEMES[state.theme] || {}).name || "—"} · всего фонов: ${total}`;
     function thumbs() {
-      const c = Kit.CATS.find(x => x.id === cat), TW = 1080, TH = 1920, px = 96 * 2;
-      $r("thumbs").innerHTML = c.items.map(t => `<button type="button" class="thumb" data-id="${t.id}" title="${esc(t.name)}" aria-label="${esc(t.name)}" aria-pressed="${t.id === state.theme}"><canvas width="${px}" height="${Math.round(px * TH / TW)}"></canvas></button>`).join("");
+      const c = CATS.find(x => x.id === cat), TW = 1080, TH = 1920, px = 96 * 2;
+      taken = opts.self ? takenThemes(opts.self) : {};
+      $r("thumbs").innerHTML = c.items.map(t => {
+        const busy = taken[t.id] && t.id !== state.theme, label = busy ? `${t.name} — уже в ${taken[t.id].name}` : t.name;
+        return `<button type="button" class="thumb${busy ? " taken" : ""}" data-id="${t.id}" ${busy ? `disabled data-taken="уже в ${esc(taken[t.id].name)}"` : ""} title="${esc(label)}" aria-label="${esc(label)}" aria-pressed="${t.id === state.theme}"><canvas width="${px}" height="${Math.round(px * TH / TW)}"></canvas></button>`;
+      }).join("");
       $r("thumbs").querySelectorAll(".thumb").forEach(b => {
         const t = Kit.THEMES[b.dataset.id], cv = b.querySelector("canvas"), c2 = cv.getContext("2d");
         c2.setTransform(cv.width / TW, 0, 0, cv.width / TW, 0, 0); Kit.drawBg(c2, t, TW, TH);
@@ -304,7 +323,7 @@
     $r("formats").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; state.format = b.dataset.k; press($r("formats"), state.format); onChange("format"); });
     $r("cats").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; cat = b.dataset.k; press($r("cats"), cat); thumbs(); });
     $r("thumbs").addEventListener("click", e => {
-      const b = e.target.closest(".thumb"); if (!b) return;
+      const b = e.target.closest(".thumb"); if (!b || b.disabled) return;
       state.theme = b.dataset.id; $r("thumbs").querySelectorAll(".thumb").forEach(x => x.setAttribute("aria-pressed", x === b));
       name(); onChange("theme");
     });
@@ -478,6 +497,6 @@
     W, SCALE, FORMATS, FONTS, SCRIPTS, SOCIALS, store, loadJSON, esc,
     digits, normPhone, fmtPhone, maskPhone, group, socText, qrTarget, loadProfile, saveProfile,
     baseStyle, styleOf, fontOf, caseOf, painter, header, footer, press,
-    tabs, designPanel, fontsPanel, contactsPanel, showPanel, defaultShow, forSection, output, profileError, safeName, PRESET,
+    tabs, designPanel, takenThemes, claimTheme, SECTIONS, fontsPanel, contactsPanel, showPanel, defaultShow, forSection, output, profileError, safeName, PRESET,
   });
 })();
