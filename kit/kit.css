@@ -116,6 +116,16 @@ input[type="color"] { width: 42px; height: 40px; border: 1px solid var(--line); 
 .slot.hour { box-shadow: inset 2px 0 0 rgba(0, 0, 0, .12); }
 .hours { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; font-size: 10.5px; color: var(--muted); }
 .hours span { white-space: nowrap; overflow: visible; }
+.dayhead b.we { color: var(--accent); }
+details.month { border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; }
+details.month + details.month { margin-top: 10px; }
+details.month > summary { cursor: pointer; padding: 12px 0; display: flex; gap: 10px; align-items: baseline; list-style: none; }
+details.month > summary::-webkit-details-marker { display: none; }
+details.month > summary::before { content: "▸"; color: var(--accent); }
+details.month[open] > summary::before { content: "▾"; }
+details.month > summary b { text-transform: capitalize; font-size: 15px; }
+details.month > summary .mstat { font-size: 12.5px; color: var(--muted); }
+details.month > .days { padding-bottom: 14px; }
 .legend { display: flex; gap: 14px; font-size: 12.5px; color: var(--muted); align-items: center; flex-wrap: wrap; }
 .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
 
