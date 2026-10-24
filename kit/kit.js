@@ -23,6 +23,18 @@
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
   };
+  // оформление сайта: светлая / тёмная / комбинированная; без выбора — как в системе
+  function uiTheme() {
+    const head = document.querySelector("header.top"); if (!head) return;
+    const cur = () => store.get("beauty.ui") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const box = document.createElement("div");
+    box.className = "uiswitch"; box.setAttribute("role", "group"); box.setAttribute("aria-label", "Оформление");
+    box.innerHTML = '<button type="button" data-k="light">Светлая</button><button type="button" data-k="dark">Тёмная</button><button type="button" data-k="mix">Комбинированная</button>';
+    const apply = () => { document.documentElement.dataset.ui = cur(); box.querySelectorAll("[data-k]").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === cur())); };
+    box.addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) { store.set("beauty.ui", b.dataset.k); apply(); } });
+    head.append(box);
+    if (store.get("beauty.ui")) apply(); else box.querySelectorAll("[data-k]").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === cur()));
+  }
   const loadJSON = k => { try { return JSON.parse(store.get(k)); } catch (e) { return null; } };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -431,6 +443,8 @@
     return "";
   }
   const safeName = s => s.trim().replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, "_") || "мастер";
+
+  uiTheme();
 
   Object.assign(Kit, {
     W, SCALE, FORMATS, FONTS, SCRIPTS, SOCIALS, store, loadJSON, esc,
