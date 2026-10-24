@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f7f3ee">
 <title>Конструктор прайс-листа</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Marck+Script&family=Montserrat:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Raleway:ital,wght@0,400;0,600;0,700;1,400&family=Manrope:wght@400;600;700&family=Nunito:ital,wght@0,400;0,700;1,400&family=Comfortaa:wght@400;700&family=Oswald:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Lora:ital,wght@0,400;0,700;1,400&family=Prata&family=Forum&family=Poiret+One&family=Marck+Script&family=Bad+Script&family=Caveat:wght@400;700&family=Lobster&family=Amatic+SC:wght@400;700&display=swap">
 <style>
-  /* Форма слева, живое превью картинки справа; на телефоне — друг под другом. */
+  /* Форма с вкладками слева, живое превью картинки справа; на телефоне превью сверху. */
   :root {
     --bg: #f7f3ee; --panel: #ffffff; --line: #e6dcd0; --field: #fffdfa;
     --text: #2b2420; --muted: #8a7b6e; --accent: #9b6b4f; --accent-ink: #ffffff; --bad: #b8483a; --ok: #4f7f45;
@@ -34,8 +34,12 @@
   header h1 { margin: 0; font-family: var(--display); font-weight: 600; font-size: 40px; line-height: 1; }
   header p { margin: 0; color: var(--muted); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; }
 
-  .grid { display: grid; grid-template-columns: minmax(0, 460px) minmax(0, 1fr); gap: 36px; align-items: start; }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+  .grid { display: grid; grid-template-columns: minmax(0, 480px) minmax(0, 1fr); gap: 36px; align-items: start; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 0 22px 22px; display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+  nav.tabs { display: flex; border-bottom: 1px solid var(--line); margin: 0 -22px; padding: 0 12px; overflow-x: auto; }
+  nav.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted); padding: 16px 12px 12px; font: inherit; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+  nav.tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab { display: flex; flex-direction: column; gap: 22px; }
   section.group { display: flex; flex-direction: column; gap: 12px; }
   section.group + section.group { border-top: 1px solid var(--line); padding-top: 20px; }
   h2 { margin: 0; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
@@ -49,36 +53,53 @@
   }
   input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .hint { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
-
-  .themes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-  .theme { border: 1px solid var(--line); background: var(--field); border-radius: 10px; padding: 6px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; font: inherit; color: var(--text); font-size: 12.5px; }
-  .theme i { display: block; height: 46px; border-radius: 6px; }
-  .theme[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
   .seg { display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
   .seg button { flex: 1; border: 0; background: var(--field); color: var(--text); font: inherit; font-size: 13.5px; padding: 10px; cursor: pointer; }
   .seg button + button { border-left: 1px solid var(--line); }
   .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 
+  .cats { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .chip { border: 1px solid var(--line); background: var(--field); color: var(--text); border-radius: 99px; padding: 8px 14px; font: inherit; font-size: 13.5px; cursor: pointer; white-space: nowrap; }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; }
+  .thumb { border: 0; padding: 0; background: none; cursor: pointer; border-radius: 8px; line-height: 0; }
+  .thumb canvas { width: 100%; height: auto; border-radius: 8px; box-shadow: 0 0 0 1px var(--line); }
+  .thumb[aria-pressed="true"] canvas { box-shadow: 0 0 0 3px var(--accent); }
+
   .svcs { display: flex; flex-direction: column; gap: 8px; }
   .svc { display: grid; grid-template-columns: minmax(0, 1fr) 96px auto; gap: 6px; align-items: center; }
-  .svc .tools { display: flex; gap: 2px; }
-  .icon { border: 1px solid transparent; background: none; color: var(--muted); font: inherit; font-size: 16px; width: 32px; height: 40px; border-radius: 8px; cursor: pointer; padding: 0; }
-  .icon:hover { color: var(--text); border-color: var(--line); }
-  .icon:disabled { opacity: .3; cursor: default; }
+  .svc .tools { display: flex; gap: 4px; }
+  .icon { border: 1px solid var(--line); background: var(--field); color: var(--muted); font: inherit; font-size: 15px; width: 34px; height: 40px; border-radius: 8px; cursor: pointer; padding: 0; }
+  .icon:hover { color: var(--text); }
+  .icon:disabled { opacity: .35; cursor: default; }
+  .icon.del { color: var(--bad); font-size: 20px; }
   .empty { font-size: 13.5px; color: var(--muted); padding: 6px 0; }
-  .add { display: flex; flex-direction: column; gap: 8px; }
+  .addrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
   .btn { font: inherit; font-size: 14px; cursor: pointer; border-radius: 10px; padding: 12px 16px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 500; }
   .btn.ghost { background: transparent; color: var(--accent); }
   .btnrow { display: flex; gap: 10px; flex-wrap: wrap; }
   .btnrow .btn { flex: 1 1 140px; }
+  .linkbtn { background: none; border: 0; color: var(--accent); padding: 2px; font: inherit; font-size: 12.5px; text-decoration: underline; cursor: pointer; }
 
-  .soc { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 8px; align-items: center; }
+  .socchips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .socin { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px; align-items: center; }
   .check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--text); cursor: pointer; }
   .check input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+
+  .tstyle { display: flex; flex-direction: column; gap: 8px; }
+  .tstyle + .tstyle { border-top: 1px solid var(--line); padding-top: 14px; }
+  .thead { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; font-weight: 600; }
+  .trow { display: flex; gap: 8px; align-items: center; }
+  .trow select { flex: 1; }
+  .trow input[type="range"] { flex: 1; accent-color: var(--accent); min-width: 0; }
+  .tval { font-size: 12.5px; color: var(--muted); width: 42px; text-align: right; }
+  .tog { border: 1px solid var(--line); background: var(--field); color: var(--text); width: 38px; height: 38px; border-radius: 8px; font: inherit; font-size: 15px; cursor: pointer; padding: 0; }
+  .tog[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  input[type="color"] { width: 42px; height: 40px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); padding: 3px; cursor: pointer; }
+
   .status { min-height: 1.3em; font-size: 13.5px; color: var(--muted); line-height: 1.45; }
   .status.err { color: var(--bad); }
   .status.ok { color: var(--ok); }
-
   .preview { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; gap: 10px; align-items: center; min-width: 0; }
   .preview canvas { width: 100%; max-width: 460px; height: auto; border-radius: 8px; box-shadow: 0 18px 50px rgba(40, 25, 15, .25); background: #ddd; }
   @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } .preview { position: static; order: -1; } .preview canvas { max-width: 320px; } }
@@ -86,7 +107,11 @@
     .svc { grid-template-columns: minmax(0, 1fr) auto; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
     .svc .name { grid-column: 1 / -1; }
   }
-  @media (max-width: 420px) { .row { grid-template-columns: 1fr; } .themes { grid-template-columns: repeat(2, minmax(0, 1fr)); } .soc { grid-template-columns: 1fr; } }
+  @media (max-width: 420px) {
+    .row { grid-template-columns: 1fr; } .socin { grid-template-columns: 1fr; }
+    nav.tabs button { flex: 1; padding: 14px 4px 10px; font-size: 12px; letter-spacing: .04em; }
+    .thumbs { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  }
 </style>
 </head>
 <body>
@@ -97,72 +122,107 @@
 
   <div class="grid">
     <form class="panel" id="form" novalidate>
-      <section class="group">
-        <h2>Дизайн</h2>
-        <div class="themes" id="themes"></div>
-        <div class="seg" id="formats"></div>
-      </section>
+      <nav class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="content">Содержание</button>
+        <button type="button" role="tab" data-tab="design">Дизайн</button>
+        <button type="button" role="tab" data-tab="fonts">Шрифты</button>
+      </nav>
 
-      <section class="group">
-        <h2>Шапка</h2>
-        <div class="field">
-          <label for="prof">Профессия</label>
-          <select id="prof"></select>
-        </div>
-        <div class="row">
+      <!-- Содержание -->
+      <div class="tab" data-tab="content">
+        <section class="group">
+          <h2>Шапка</h2>
           <div class="field">
-            <label for="title">Заголовок</label>
-            <input id="title" type="text" maxlength="24">
+            <label for="prof">Профессия</label>
+            <select id="prof"></select>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="title">Заголовок</label>
+              <input id="title" type="text" maxlength="24">
+            </div>
+            <div class="field">
+              <label for="subtitle">Подзаголовок</label>
+              <input id="subtitle" type="text" maxlength="40">
+            </div>
           </div>
           <div class="field">
-            <label for="subtitle">Подзаголовок</label>
-            <input id="subtitle" type="text" maxlength="40">
+            <label for="master" class="req">Имя мастера</label>
+            <input id="master" type="text" maxlength="40" placeholder="Например, Лариса Чурилова">
           </div>
-        </div>
-        <div class="field">
-          <label for="master" class="req">Имя мастера</label>
-          <input id="master" type="text" maxlength="40" placeholder="Например, Лариса Чурилова">
-        </div>
-      </section>
+        </section>
 
-      <section class="group">
-        <h2>Услуги</h2>
-        <div class="svcs" id="svcs"></div>
-        <div class="add">
+        <section class="group">
+          <h2>Услуги</h2>
+          <div class="svcs" id="svcs"></div>
           <button class="btn ghost" type="button" id="addBtn">+ Добавить услугу</button>
-          <select id="addSel" hidden aria-label="Выберите услугу"></select>
-        </div>
-        <div class="field">
-          <label for="currency">Как писать цену</label>
-          <select id="currency">
-            <option value="руб.">3 000 руб.</option>
-            <option value="₽">3 000 ₽</option>
-          </select>
-        </div>
-      </section>
+          <div class="addrow" id="addRow" hidden>
+            <select id="addSel" aria-label="Выберите услугу"></select>
+            <button class="btn ghost" type="button" id="addCancel">Отмена</button>
+          </div>
+          <div class="field">
+            <label for="currency">Как писать цену</label>
+            <select id="currency">
+              <option value="руб.">3 000 руб.</option>
+              <option value="₽">3 000 ₽</option>
+            </select>
+          </div>
+        </section>
 
-      <section class="group">
-        <h2>Контакты</h2>
-        <div class="field">
-          <label for="phone" class="req">Телефон</label>
-          <input id="phone" type="tel" inputmode="tel" placeholder="+7 (900) 000-00-00">
-        </div>
-        <span class="lbl">Соцсети — любые или ни одной</span>
-        <div id="socs" class="svcs"></div>
-        <div class="field">
-          <label for="qr">QR-код на картинке</label>
-          <select id="qr">
-            <option value="none">Без QR-кода</option>
-            <option value="wa">WhatsApp</option>
-            <option value="tg">Telegram</option>
-            <option value="ig">Instagram</option>
-            <option value="max">MAX</option>
-            <option value="url">Своя ссылка</option>
-          </select>
-        </div>
-        <input id="qrUrl" type="url" placeholder="https://…" hidden aria-label="Ссылка для QR-кода">
-        <span class="hint" id="qrHint"></span>
-      </section>
+        <section class="group">
+          <h2>Контакты</h2>
+          <div class="field">
+            <label for="phone" class="req">Телефон</label>
+            <input id="phone" type="tel" inputmode="tel" placeholder="+7 (999) 999-99-99" maxlength="18">
+          </div>
+          <span class="lbl">Соцсети — любые или ни одной</span>
+          <div class="socchips" id="socchips"></div>
+          <div class="svcs" id="socs"></div>
+          <div class="field">
+            <span class="lbl">Соцсети на картинке</span>
+            <div class="seg" id="socLayout">
+              <button type="button" data-k="row">В строку</button>
+              <button type="button" data-k="col">Столбиком</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="qr">QR-код на картинке</label>
+            <select id="qr">
+              <option value="none">Без QR-кода</option>
+              <option value="wa">WhatsApp</option>
+              <option value="tg">Telegram</option>
+              <option value="ig">Instagram</option>
+              <option value="max">MAX</option>
+              <option value="url">Своя ссылка</option>
+            </select>
+          </div>
+          <input id="qrUrl" type="url" placeholder="https://…" hidden aria-label="Ссылка для QR-кода">
+          <span class="hint" id="qrHint"></span>
+        </section>
+      </div>
+
+      <!-- Дизайн -->
+      <div class="tab" data-tab="design" hidden>
+        <section class="group">
+          <h2>Формат</h2>
+          <div class="seg" id="formats"></div>
+        </section>
+        <section class="group">
+          <h2>Фон</h2>
+          <div class="cats" id="cats"></div>
+          <div class="thumbs" id="thumbs"></div>
+          <span class="hint" id="themeName"></span>
+        </section>
+      </div>
+
+      <!-- Шрифты -->
+      <div class="tab" data-tab="fonts" hidden>
+        <section class="group">
+          <div class="thead"><h2>Шрифты и размер</h2><button type="button" class="linkbtn" id="resetAll">сбросить всё</button></div>
+          <span class="hint">«Как в дизайне» — шрифт подбирается под выбранный фон. Список услуг сам уменьшится, если не влезает.</span>
+          <div id="tstyles"></div>
+        </section>
+      </div>
 
       <section class="group">
         <label class="check"><input type="checkbox" id="watermark"> Водяной знак «ОБРАЗЕЦ»</label>
@@ -225,15 +285,50 @@ const FORMATS = {
   story: { name: "Сторис 9:16", h: 1920, top: 150, bottom: 130, qr: 250 },
   post:  { name: "Пост 4:5",   h: 1350, top: 80,  bottom: 80,  qr: 200 },
 };
+const FONTS = ["Montserrat", "Raleway", "Manrope", "Nunito", "Comfortaa", "Oswald", "Playfair Display", "Cormorant Garamond",
+  "Lora", "Prata", "Forum", "Poiret One", "Marck Script", "Bad Script", "Caveat", "Lobster", "Amatic SC"];
+const SCRIPTS = new Set(["Marck Script", "Bad Script", "Caveat", "Lobster", "Amatic SC"]);
+const TEXTS = [
+  { k: "title", name: "Заголовок" }, { k: "subtitle", name: "Подзаголовок" }, { k: "master", name: "Имя мастера" },
+  { k: "services", name: "Услуги" }, { k: "prices", name: "Цены" }, { k: "contacts", name: "Контакты" },
+];
 
-// ---------- оформления ----------
+// ---------- цвета и вспомогательное ----------
+const rgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const A = (h, a) => `rgba(${rgb(h).join(",")},${a})`;
+const mix = (h1, h2, t) => "#" + rgb(h1).map((v, i) => Math.round(v + (rgb(h2)[i] - v) * t).toString(16).padStart(2, "0")).join("");
 const rnd = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-function vgrad(c, H, a, b) { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, a); g.addColorStop(1, b); return g; }
+const hash = s => [...s].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261);
+const METAL = {
+  gold: ["#9c7a3c", "#e0c78e", "#a8843f", "#d9bd7c", "#c9a960", "золото"],
+  silver: ["#8e9297", "#eceff2", "#9fa4aa", "#d5d9dd", "#c3c7cc", "серебро"],
+  rose: ["#a7695a", "#f0c4b4", "#b37766", "#e3a998", "#d39a88", "розовое золото"],
+};
+function paintOn(c, fill, x0, x1) {                             // металл — градиентом, остальное — как есть
+  const m = METAL[fill];
+  if (!m) return fill;
+  const g = c.createLinearGradient(x0, 0, x1, 0);
+  [0, .35, .65, 1].forEach((p, i) => g.addColorStop(p, m[i]));
+  return g;
+}
+function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+function archPath(c, W, H, side, top) {                         // приплюснутая арка — не задевает заголовок
+  const rx = W / 2 - side, ry = rx * .6;
+  c.beginPath(); c.moveTo(side, H - side); c.lineTo(side, top + ry); c.ellipse(W / 2, top + ry, rx, ry, 0, Math.PI, 0); c.lineTo(W - side, H - side); c.closePath();
+}
+function blob(c, cx, cy, R, r) {                                // мягкое «пятно» произвольной формы
+  const n = 7, p = [];
+  for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, d = R * (.75 + r() * .5); p.push([cx + Math.cos(a) * d, cy + Math.sin(a) * d]); }
+  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  c.beginPath(); c.moveTo(...mid(p[n - 1], p[0]));
+  p.forEach((pt, i) => c.quadraticCurveTo(pt[0], pt[1], ...mid(pt, p[(i + 1) % n])));
+  c.closePath();
+}
 function sprig(c, x, y, len, ang, col) {                       // веточка с листьями
   c.save(); c.translate(x, y); c.rotate(ang); c.strokeStyle = col; c.fillStyle = col; c.lineWidth = 3;
   c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(len / 2, -len * .1, len, 0); c.stroke();
   for (let i = 1; i <= 7; i++) {
-    const t = i / 8, px = len * t, py = -len * .1 * 2 * t * (1 - t), leaf = len * .11 * (1 - t * .45);
+    const t = i / 8, px = len * t, py = -len * .1 * 2 * t * (1 - t), leaf = Math.min(len * .11, 46) * (1 - t * .45);
     [-1, 1].forEach(side => {
       c.save(); c.translate(px, py); c.rotate(side * .75 - .25); c.globalAlpha = .6;
       c.beginPath(); c.ellipse(leaf, 0, leaf, leaf * .38, 0, 0, Math.PI * 2); c.fill(); c.restore();
@@ -241,56 +336,305 @@ function sprig(c, x, y, len, ang, col) {                       // веточка
   }
   c.restore();
 }
-const THEMES = {
-  gold: { name: "Чёрное золото", sw: "linear-gradient(135deg,#0f0d0b 55%,#d9bd7c 55%)", title: "caps",
-    ink: "#efe6d6", muted: "#b49f7b", accent: "gold", dots: "rgba(201,169,96,.55)", qrTile: ["#f1e3bd", "#d9bf85"], qrInk: "#16120e", mark: .09,
-    bg(c, W, H) {
-      const g = c.createRadialGradient(W / 2, H * .35, 0, W / 2, H * .35, H * .8);
-      g.addColorStop(0, "#211c17"); g.addColorStop(1, "#0b0a09"); c.fillStyle = g; c.fillRect(0, 0, W, H);
-      c.strokeStyle = "#c9a960"; c.lineWidth = 2;
-      [[46, 46, 1, 1], [W - 46, 46, -1, 1], [46, H - 46, 1, -1], [W - 46, H - 46, -1, -1]].forEach(([x, y, sx, sy]) => {
-        c.beginPath(); c.moveTo(x + sx * 150, y); c.lineTo(x, y); c.lineTo(x, y + sy * 150); c.stroke();
-      });
-    } },
-  powder: { name: "Пудра", sw: "linear-gradient(135deg,#f8e6e2 55%,#b0707a 55%)", title: "script",
-    ink: "#5a3d42", muted: "#9a7479", accent: "#a8636f", dots: "rgba(168,99,111,.45)", qrTile: ["#fff8f6", "#fff8f6"], qrInk: "#5a3d42", mark: .1,
-    bg(c, W, H) {
-      c.fillStyle = vgrad(c, H, "#fbefec", "#f0d8d3"); c.fillRect(0, 0, W, H);
-      [[W * .92, H * .06, 270, "rgba(232,190,183,.6)"], [W * .04, H * .97, 320, "rgba(243,205,198,.7)"], [W * .98, H * .72, 150, "rgba(236,200,193,.55)"], [W * .02, H * .3, 90, "rgba(236,200,193,.5)"]]
-        .forEach(([x, y, r, col]) => { c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); });
-    } },
-  minimal: { name: "Минимализм", sw: "linear-gradient(135deg,#fbfaf7 55%,#1f1f1f 55%)", title: "caps",
-    ink: "#1f1f1f", muted: "#7b7b7b", accent: "#1f1f1f", dots: "rgba(0,0,0,.35)", qrTile: ["#ffffff", "#ffffff"], qrInk: "#111111", mark: .08,
-    bg(c, W, H) {
-      c.fillStyle = "#faf9f6"; c.fillRect(0, 0, W, H);
-      c.strokeStyle = "#1f1f1f"; c.lineWidth = 1.6; c.strokeRect(40, 40, W - 80, H - 80);
-      c.lineWidth = .8; c.strokeRect(52, 52, W - 104, H - 104);
-    } },
-  nude: { name: "Нюд", sw: "linear-gradient(135deg,#eadccb 55%,#8a6447 55%)", title: "script",
-    ink: "#4b382b", muted: "#8f765f", accent: "#8a6447", dots: "rgba(138,100,71,.45)", qrTile: ["#f8f1e8", "#f8f1e8"], qrInk: "#4b382b", mark: .1,
-    bg(c, W, H) {
-      c.fillStyle = vgrad(c, H, "#ecdfcf", "#e0ccb5"); c.fillRect(0, 0, W, H);
-      const x0 = 60, x1 = W - 60, r = (x1 - x0) / 2, top = 56 + r;
-      c.beginPath(); c.moveTo(x0, H - 56); c.lineTo(x0, top); c.arc(W / 2, top, r, Math.PI, 0); c.lineTo(x1, H - 56); c.closePath();
-      c.fillStyle = "rgba(248,241,232,.8)"; c.fill(); c.strokeStyle = "#c7aa8b"; c.lineWidth = 2; c.stroke();
-    } },
-  sage: { name: "Шалфей", sw: "linear-gradient(135deg,#e1e7da 55%,#5d7357 55%)", title: "caps",
-    ink: "#2e392b", muted: "#6d7d67", accent: "#4f654a", dots: "rgba(79,101,74,.45)", qrTile: ["#f6f8f2", "#f6f8f2"], qrInk: "#2e392b", mark: .1,
-    bg(c, W, H) {
-      c.fillStyle = vgrad(c, H, "#e8ede2", "#d6dfcd"); c.fillRect(0, 0, W, H);
-      sprig(c, -20, 120, 330, -.35, "#7f9878"); sprig(c, 40, -30, 260, .55, "#93aa8b");
-      sprig(c, W + 20, H - 120, 330, Math.PI - .35, "#7f9878"); sprig(c, W - 40, H + 30, 260, Math.PI + .55, "#93aa8b");
-    } },
-  night: { name: "Лавандовая ночь", sw: "linear-gradient(135deg,#241b30 55%,#cfb0e6 55%)", title: "script",
-    ink: "#f1e8f7", muted: "#b7a3c7", accent: "#d4b5ea", dots: "rgba(212,181,234,.5)", qrTile: ["#f5eefb", "#e2d1f0"], qrInk: "#241b30", mark: .08,
-    bg(c, W, H) {
-      const g = c.createRadialGradient(W / 2, H * .3, 0, W / 2, H * .3, H * .85);
-      g.addColorStop(0, "#36284d"); g.addColorStop(1, "#15101d"); c.fillStyle = g; c.fillRect(0, 0, W, H);
-      const r = rnd(7); c.fillStyle = "#eadff6";
-      for (let i = 0; i < 90; i++) { c.globalAlpha = .15 + r() * .55; c.beginPath(); c.arc(r() * W, r() * H, .8 + r() * 1.8, 0, Math.PI * 2); c.fill(); }
-      c.globalAlpha = 1;
-    } },
+function euc(c, x, y, len, ang, col) {                          // эвкалипт — круглые листья
+  c.save(); c.translate(x, y); c.rotate(ang); c.strokeStyle = col; c.fillStyle = col; c.lineWidth = 2.5;
+  c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(len / 2, len * .06, len, 0); c.stroke();
+  for (let i = 1; i <= 6; i++) {
+    const t = i / 7, r = len * .075 * (1 - t * .4);
+    [-1, 1].forEach(s => { c.globalAlpha = .5; c.beginPath(); c.arc(len * t, s * r * 1.1, r, 0, Math.PI * 2); c.fill(); });
+  }
+  c.restore();
+}
+function flower(c, x, y, R, col, mid) {
+  c.save(); c.translate(x, y); c.fillStyle = col; c.globalAlpha = .85;
+  for (let i = 0; i < 5; i++) { c.rotate(Math.PI * 2 / 5); c.beginPath(); c.ellipse(R * .55, 0, R * .55, R * .33, 0, 0, Math.PI * 2); c.fill(); }
+  c.fillStyle = mid; c.beginPath(); c.arc(0, 0, R * .2, 0, Math.PI * 2); c.fill(); c.restore();
+}
+function lavender(c, x, y, len, ang, stem, bud) {
+  c.save(); c.translate(x, y); c.rotate(ang); c.strokeStyle = stem; c.lineWidth = 2.5;
+  c.beginPath(); c.moveTo(0, 0); c.lineTo(len, 0); c.stroke(); c.fillStyle = bud; c.globalAlpha = .85;
+  for (let i = 0; i < 10; i++) { const t = .58 + i * .045; [-1, 1].forEach(s => { c.beginPath(); c.ellipse(len * t, s * 6, 8, 4.5, s * .5, 0, Math.PI * 2); c.fill(); }); }
+  c.restore();
+}
+function waveBand(c, W, y0, amp, freq, phase, toY, fill) {
+  c.beginPath(); c.moveTo(0, toY); c.lineTo(0, y0);
+  for (let x = 0; x <= W; x += 20) c.lineTo(x, y0 + Math.sin(x / W * Math.PI * 2 * freq + phase) * amp);
+  c.lineTo(W, toY); c.closePath(); c.fillStyle = fill; c.fill();
+}
+
+// ---------- узоры фонов ----------
+const DECOR = {
+  corners(c, W, H, r, t) {
+    c.strokeStyle = t.acc; c.lineWidth = 2;
+    [[46, 46, 1, 1], [W - 46, 46, -1, 1], [46, H - 46, 1, -1], [W - 46, H - 46, -1, -1]].forEach(([x, y, sx, sy]) => {
+      c.beginPath(); c.moveTo(x + sx * 150, y); c.lineTo(x, y); c.lineTo(x, y + sy * 150); c.stroke();
+    });
+  },
+  frame2(c, W, H, r, t) { c.strokeStyle = t.acc; c.lineWidth = 1.6; c.strokeRect(40, 40, W - 80, H - 80); c.lineWidth = .8; c.strokeRect(52, 52, W - 104, H - 104); },
+  frame1(c, W, H, r, t) { c.strokeStyle = t.acc; c.lineWidth = 2.2; c.strokeRect(44, 44, W - 88, H - 88); },
+  cornersThin(c, W, H, r, t) {
+    c.strokeStyle = t.acc; c.fillStyle = t.acc; c.lineWidth = 1.4;
+    [[58, 58, 1, 1], [W - 58, 58, -1, 1], [58, H - 58, 1, -1], [W - 58, H - 58, -1, -1]].forEach(([x, y, sx, sy]) => {
+      c.beginPath(); c.moveTo(x + sx * 90, y); c.lineTo(x, y); c.lineTo(x, y + sy * 90); c.stroke();
+      c.beginPath(); c.arc(x + sx * 14, y + sy * 14, 3, 0, Math.PI * 2); c.fill();
+    });
+  },
+  deco(c, W, H, r, t) {                                         // ар-деко: веера сверху и снизу
+    const R = H > 1500 ? 110 : 66;
+    c.strokeStyle = t.acc; c.lineWidth = 1.5;
+    [[0, 1], [H, -1]].forEach(([cy, s]) => {
+      const a0 = s > 0 ? 0 : Math.PI;
+      for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(W / 2, cy, R * (.45 + k * .22), a0, a0 + Math.PI); c.stroke(); }
+      for (let i = 1; i < 10; i++) { const a = a0 + i * Math.PI / 10; c.beginPath(); c.moveTo(W / 2 + Math.cos(a) * R * .45, cy + Math.sin(a) * R * .45); c.lineTo(W / 2 + Math.cos(a) * R, cy + Math.sin(a) * R); c.stroke(); }
+    });
+    c.globalAlpha = .6; c.lineWidth = 1; c.strokeRect(34, 34, W - 68, H - 68); c.globalAlpha = 1;
+  },
+  stars(c, W, H, r, t) {
+    c.fillStyle = mix(t.ink, t.acc, .3);
+    for (let i = 0; i < 90; i++) { c.globalAlpha = .12 + r() * .5; c.beginPath(); c.arc(r() * W, r() * H, .8 + r() * 1.8, 0, Math.PI * 2); c.fill(); }
+    c.globalAlpha = .85; c.fillStyle = t.acc;
+    [[.1, .07], [.9, .12], [.06, .55], [.94, .5], [.12, .93], [.88, .95]].forEach(([x, y], i) => {
+      const s = 10 + (i % 3) * 5; c.save(); c.translate(x * W, y * H); c.beginPath();
+      c.moveTo(0, -s); c.quadraticCurveTo(0, 0, s, 0); c.quadraticCurveTo(0, 0, 0, s); c.quadraticCurveTo(0, 0, -s, 0); c.quadraticCurveTo(0, 0, 0, -s); c.fill(); c.restore();
+    });
+    c.globalAlpha = 1;
+  },
+  arcLine(c, W, H, r, t) { archPath(c, W, H, 64, 30); c.strokeStyle = t.acc; c.lineWidth = 1.6; c.globalAlpha = .85; c.stroke(); c.globalAlpha = 1; },
+  sideLines(c, W, H, r, t) {
+    c.strokeStyle = t.acc; c.fillStyle = t.acc; c.lineWidth = 1.4;
+    [52, W - 52].forEach(x => {
+      c.beginPath(); c.moveTo(x, H * .12); c.lineTo(x, H * .45); c.moveTo(x, H * .55); c.lineTo(x, H * .88); c.stroke();
+      c.beginPath(); c.moveTo(x, H / 2 - 12); c.lineTo(x + 8, H / 2); c.lineTo(x, H / 2 + 12); c.lineTo(x - 8, H / 2); c.closePath(); c.fill();
+    });
+  },
+  blobs(c, W, H, r, t) {
+    [[W * .92, H * .06, 270, .6], [W * .04, H * .97, 320, .7], [W * .98, H * .72, 150, .55], [W * .02, H * .3, 90, .5]]
+      .forEach(([x, y, rad, a]) => { c.fillStyle = A(t.deco, a); c.beginPath(); c.arc(x, y, rad, 0, Math.PI * 2); c.fill(); });
+  },
+  waves(c, W, H, r, t) {
+    [[H - 200, .3, 1.1, 0], [H - 150, .45, 1.4, 1.5], [H - 95, .65, .9, 3]].forEach(([y, a, f, ph]) => waveBand(c, W, y, 24, f, ph, H, A(t.deco, a)));
+    waveBand(c, W, 70, 18, 1.2, 2, 0, A(t.deco, .35));
+  },
+  arch(c, W, H, r, t) { archPath(c, W, H, 60, 30); c.fillStyle = A(mix(t.a, "#ffffff", .55), .82); c.fill(); c.strokeStyle = t.deco; c.lineWidth = 2; c.stroke(); },
+  dotsSoft(c, W, H, r, t) {
+    for (let i = 0, n = 0; i < 400 && n < 46; i++) {
+      const x = r() * W, y = r() * H, rad = 6 + r() * 36;
+      if (x > 120 && x < W - 120 && y > 300 && y < H - 300) continue;
+      c.fillStyle = A(t.deco, .25 + r() * .3); c.beginPath(); c.arc(x, y, rad, 0, Math.PI * 2); c.fill(); n++;
+    }
+  },
+  circleBig(c, W, H, r, t) {
+    c.fillStyle = A(t.deco, .55); c.beginPath(); c.arc(W * .88, H * .08, 300, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = A(t.deco, .9); c.lineWidth = 3; c.beginPath(); c.arc(W * .1, H * .92, 220, 0, Math.PI * 2); c.stroke();
+    c.fillStyle = A(t.deco, .45); c.beginPath(); c.arc(W * .05, H * .45, 40, 0, Math.PI * 2); c.fill();
+  },
+  organic(c, W, H, r, t) {
+    [[W, 0, 300, .55], [0, H, 340, .6], [W, H * .62, 120, .45]].forEach(([x, y, R, a]) => { blob(c, x, y, R, r); c.fillStyle = A(t.deco, a); c.fill(); });
+  },
+  bars(c, W, H, r, t) { c.fillStyle = t.acc; c.fillRect(60, 56, W - 120, 5); c.fillRect(60, H - 61, W - 120, 5); },
+  sideStripe(c, W, H, r, t) { c.fillStyle = t.acc; c.fillRect(0, 0, 26, H); c.fillRect(40, 0, 2, H); },
+  underline(c, W, H, r, t) { c.fillStyle = t.acc; c.fillRect(60, 60, W - 120, 1.5); c.fillRect(60, H - 61, W - 120, 1.5); },
+  none() {},
+  sprigs(c, W, H, r, t) {
+    sprig(c, -20, 120, 330, -.35, t.leaf); sprig(c, 40, -30, 260, .55, t.leaf2);
+    sprig(c, W + 20, H - 120, 330, Math.PI - .35, t.leaf); sprig(c, W - 40, H + 30, 260, Math.PI + .55, t.leaf2);
+  },
+  eucalyptus(c, W, H, r, t) {
+    euc(c, -10, 90, 320, -.3, t.leaf); euc(c, 60, -20, 240, .6, t.leaf2);
+    euc(c, W + 10, H - 90, 320, Math.PI - .3, t.leaf); euc(c, W - 60, H + 20, 240, Math.PI + .6, t.leaf2);
+  },
+  flowers(c, W, H, r, t) {
+    sprig(c, -10, 210, 200, -.6, t.leaf); sprig(c, W + 10, H - 210, 200, Math.PI - .6, t.leaf);
+    [[70, 70, 50], [175, 38, 34], [38, 185, 30]].forEach(([x, y, R]) => { flower(c, x, y, R, t.leaf2, t.acc); flower(c, W - x, H - y, R, t.leaf2, t.acc); });
+  },
+  lavender(c, W, H, r, t) {
+    [[22, -1.68], [44, -1.6], [64, -1.52]].forEach(([x, a], i) => {
+      lavender(c, x, H + 10, 300 + i * 40, a, t.leaf, t.leaf2); lavender(c, W - x, H + 10, 300 + i * 40, -Math.PI - a, t.leaf, t.leaf2);
+    });
+  },
+  leavesFrame(c, W, H, r, t) {
+    sprig(c, -10, 44, 400, .06, t.leaf); sprig(c, W + 10, 44, 400, Math.PI - .06, t.leaf2);
+    sprig(c, -10, H - 44, 400, -.06, t.leaf2); sprig(c, W + 10, H - 44, 400, Math.PI + .06, t.leaf);
+  },
+  branch(c, W, H, r, t) { sprig(c, W - 8, H + 10, 720, -Math.PI / 2 - .04, t.leaf); sprig(c, -10, 80, 260, -.25, t.leaf2); },
+  mesh(c, W, H, r, t) {
+    [[.1, .05], [.95, .2], [.05, .75], [.9, .95], [.5, .5]].forEach(([x, y], i) => {
+      const col = t.cols[i % t.cols.length], g = c.createRadialGradient(x * W, y * H, 0, x * W, y * H, W * .7);
+      g.addColorStop(0, A(col, .85)); g.addColorStop(1, A(col, 0)); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    });
+  },
+  wavesBold(c, W, H, r, t) {
+    const top = H > 1500 ? 110 : 70;                            // верхние волны не заходят на заголовок
+    t.cols.forEach((col, i) => { waveBand(c, W, H - 230 + i * 55, 30, 1 + i * .3, i * 1.7, H, A(col, .8)); waveBand(c, W, top - i * 30, 22, 1.2 + i * .2, i * 2.1, 0, A(col, .75)); });
+  },
+  terrazzo(c, W, H, r, t) {
+    for (let i = 0; i < 130; i++) {
+      const x = r() * W, y = r() * H, R = 8 + r() * 20, n = 3 + Math.floor(r() * 3), a0 = r() * 6;
+      c.beginPath(); for (let k = 0; k < n; k++) { const a = a0 + k / n * Math.PI * 2, d = R * (.6 + r() * .4); c.lineTo(x + Math.cos(a) * d, y + Math.sin(a) * d); }
+      c.closePath(); c.fillStyle = A(t.cols[i % t.cols.length], .9); c.fill();
+    }
+  },
+  terrazzoFine(c, W, H, r, t) {
+    for (let i = 0; i < 80; i++) {
+      const x = r() * W, y = r() * H, R = 4 + r() * 10, n = 3 + Math.floor(r() * 3), a0 = r() * 6;
+      c.beginPath(); for (let k = 0; k < n; k++) { const a = a0 + k / n * Math.PI * 2; c.lineTo(x + Math.cos(a) * R, y + Math.sin(a) * R * (.6 + r() * .4)); }
+      c.closePath(); c.fillStyle = A(t.cols[i % t.cols.length], .75); c.fill();
+    }
+  },
+  arcs(c, W, H, r, t) {
+    c.lineWidth = 13;
+    [[W, 0], [0, H]].forEach(([x, y]) => { for (let k = 0; k < 6; k++) { c.strokeStyle = A(t.cols[k % t.cols.length], .8); c.beginPath(); c.arc(x, y, 60 + k * 32, 0, Math.PI * 2); c.stroke(); } });
+  },
+  strokes(c, W, H, r, t) {
+    c.lineCap = "round";
+    for (let i = 0; i < 6; i++) {
+      const top = i % 2 === 0, y = top ? 60 + r() * 180 : H - 60 - r() * 180, x1 = 250 + r() * 450, fromLeft = i % 4 < 2;
+      c.strokeStyle = A(t.cols[i % t.cols.length], .55); c.lineWidth = 60 + r() * 50;
+      c.beginPath(); const sx = fromLeft ? -60 : W + 60, ex = fromLeft ? x1 : W - x1;
+      c.moveTo(sx, y); c.quadraticCurveTo((sx + ex) / 2, y + (r() - .5) * 120, ex, y + (r() - .5) * 60); c.stroke();
+    }
+    c.lineCap = "butt";
+  },
+  shapes(c, W, H, r, t) {
+    const [c0, c1, c2] = t.cols;
+    c.fillStyle = A(c0, .85); c.beginPath(); c.arc(0, 0, 250, 0, Math.PI * 2); c.fill();
+    c.fillStyle = A(c1, .8); c.beginPath(); c.arc(W - 30, H - 50, 210, 0, Math.PI * 2); c.fill();
+    c.fillStyle = A(c2, .9); c.beginPath(); c.moveTo(W - 170, 60); c.lineTo(W - 50, 60); c.lineTo(W - 110, 160); c.closePath(); c.fill();
+    c.strokeStyle = A(c2, .9); c.lineWidth = 14; c.beginPath(); c.arc(70, H - 120, 70, 0, Math.PI * 2); c.stroke();
+  },
+  marble(c, W, H, r, t) {
+    for (let i = 0; i < 6; i++) { blob(c, r() * W, r() * H, 200 + r() * 200, r); c.fillStyle = A(t.vein, .05); c.fill(); }
+    const vein = (col, alpha, lw) => {
+      let x = r() * W * 1.2 - W * .1, y = -40; c.beginPath(); c.moveTo(x, y);
+      while (y < H + 40) { const nx = x + (r() - .35) * 260, ny = y + 120 + r() * 220; c.bezierCurveTo(x + (r() - .5) * 200, y + 60, nx + (r() - .5) * 200, ny - 60, nx, ny); x = nx; y = ny; }
+      c.strokeStyle = A(col, alpha); c.lineWidth = lw; c.stroke();
+    };
+    for (let i = 0; i < 14; i++) vein(t.vein, .12 + r() * .3, .6 + r() * 2.4);
+    if (t.vein2) for (let i = 0; i < 4; i++) vein(t.vein2, .55 + r() * .3, 1 + r() * 1.5);
+  },
+  linen(c, W, H, r, t) {
+    const col = t.dark ? "#ffffff" : "#000000";
+    for (let y = 0; y < H; y += 3) { c.fillStyle = A(col, .02 + r() * .035); c.fillRect(0, y, W, 1); }
+    for (let x = 0; x < W; x += 3) { c.fillStyle = A(col, .015 + r() * .03); c.fillRect(x, 0, 1, H); }
+  },
+  grainPaper(c, W, H, r, t) {
+    for (let i = 0; i < 9000; i++) { c.fillStyle = A(r() < .5 ? "#000000" : "#ffffff", r() * .08); c.fillRect(r() * W, r() * H, 2, 2); }
+    for (let i = 0; i < 40; i++) { blob(c, r() * W, r() * H, 60 + r() * 120, r); c.fillStyle = A("#000000", .018); c.fill(); }
+  },
+  velvet(c, W, H, r, t) {
+    let g = c.createRadialGradient(W * .3, H * .2, 0, W * .3, H * .2, H * .7); g.addColorStop(0, "rgba(255,255,255,.09)"); g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    g = c.createRadialGradient(W / 2, H / 2, H * .3, W / 2, H / 2, H * .75); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.45)"); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    for (let i = 0; i < 6000; i++) { c.fillStyle = A("#ffffff", r() * .04); c.fillRect(r() * W, r() * H, 2, 2); }
+  },
 };
+
+// ---------- 6 категорий × 16 фонов ----------
+function mk(o) {
+  const acc = METAL[o.accent] ? METAL[o.accent][4] : o.accent, b = o.b || o.a;
+  return {
+    title: "caps", ...o, b, acc, dark: !!o.dark,
+    muted: o.muted || mix(o.ink, mix(o.a, b, .5), .4),
+    dots: A(acc, .5),
+    qrTile: o.dark ? [mix(acc, "#ffffff", .8), mix(acc, "#ffffff", .62)] : ["#ffffff", "#ffffff"],
+    qrInk: o.dark ? b : o.ink,
+    mark: o.dark ? .09 : .1,
+  };
+}
+const DECOR_NAMES = { corners: "уголки", frame2: "двойная рамка", frame1: "рамка", cornersThin: "тонкие уголки", deco: "ар-деко", stars: "звёзды",
+  arcLine: "арка", sideLines: "линии", blobs: "круги", waves: "волны", arch: "арка", dotsSoft: "конфетти", circleBig: "солнце", organic: "пятна",
+  bars: "полосы", sideStripe: "полоса сбоку", underline: "линии", none: "чистый", sprigs: "веточки", eucalyptus: "эвкалипт", flowers: "цветы",
+  lavender: "лаванда", leavesFrame: "листья", branch: "ветка", mesh: "градиент", wavesBold: "волны", terrazzo: "терраццо", arcs: "кольца",
+  strokes: "мазки", shapes: "геометрия" };
+const CATS = (() => {
+  const cats = [];
+  const add = (id, name, list) => cats.push({ id, name, items: list.map((o, i) => mk({ id: `${id}-${i}`, ...o, name: o.name || `${o.n} · ${DECOR_NAMES[o.decor]}` })) });
+  const D = [
+    { n: "Чёрный", a: "#211c17", b: "#0b0a09", ink: "#efe6d6" }, { n: "Графит", a: "#2e2e30", b: "#121213", ink: "#ecebea" },
+    { n: "Тёмно-синий", a: "#1f2a40", b: "#0c111c", ink: "#e9edf5" }, { n: "Изумруд", a: "#1d3a30", b: "#0a1712", ink: "#e8f0ea" },
+    { n: "Бордо", a: "#40192a", b: "#17080e", ink: "#f5e7ec" }, { n: "Шоколад", a: "#3a2a20", b: "#140d09", ink: "#f2e8de" },
+    { n: "Слива", a: "#36284d", b: "#15101d", ink: "#f1e8f7" }, { n: "Петроль", a: "#16343d", b: "#081418", ink: "#e6f1f3" }];
+  add("lux", "Тёмные люкс", [[0, "gold", "corners", "caps"], [1, "silver", "frame2", "caps"], [2, "gold", "deco", "caps"], [4, "rose", "corners", "script"],
+    [3, "gold", "arcLine", "script"], [6, "silver", "stars", "script"], [5, "gold", "frame2", "caps"], [7, "rose", "deco", "caps"],
+    [0, "rose", "stars", "script"], [2, "silver", "sideLines", "caps"], [3, "silver", "corners", "caps"], [4, "gold", "sideLines", "script"],
+    [1, "gold", "arcLine", "caps"], [5, "rose", "arcLine", "script"], [6, "gold", "deco", "caps"], [7, "gold", "stars", "script"]]
+    .map(([d, m, decor, title]) => ({ ...D[d], dark: true, radial: true, accent: m, decor, title, name: `${D[d].n} · ${METAL[m][5]} · ${DECOR_NAMES[decor]}` })));
+  const P = [
+    { n: "Пудра", a: "#fbefec", b: "#f0d8d3", ink: "#5a3d42", accent: "#a8636f", deco: "#e8beb7" },
+    { n: "Персик", a: "#fff1e8", b: "#f8d9c4", ink: "#5b3f30", accent: "#c0714a", deco: "#f3c3a5" },
+    { n: "Лаванда", a: "#f3effa", b: "#e2d8f1", ink: "#43385a", accent: "#7d68a8", deco: "#cfc0ea" },
+    { n: "Мята", a: "#eef8f3", b: "#d6ede2", ink: "#2f4a3e", accent: "#4f8a70", deco: "#b8e0cd" },
+    { n: "Небо", a: "#eef5fb", b: "#d7e7f4", ink: "#2d4257", accent: "#4f7aa3", deco: "#b9d4ec" },
+    { n: "Ваниль", a: "#fffaec", b: "#f6ead0", ink: "#56472b", accent: "#b0893e", deco: "#efd9a7" },
+    { n: "Сирень", a: "#fbeff8", b: "#efd6ea", ink: "#55374f", accent: "#a35a96", deco: "#e6bddc" },
+    { n: "Нюд", a: "#ecdfcf", b: "#e0ccb5", ink: "#4b382b", accent: "#8a6447", deco: "#c7aa8b" }];
+  add("pastel", "Пастель", [[0, "blobs", "script"], [0, "waves", "caps"], [1, "circleBig", "script"], [1, "dotsSoft", "caps"], [2, "organic", "script"], [2, "arch", "caps"],
+    [3, "waves", "script"], [3, "blobs", "caps"], [4, "dotsSoft", "script"], [4, "organic", "caps"], [5, "arch", "script"], [5, "circleBig", "caps"],
+    [6, "blobs", "script"], [6, "waves", "caps"], [7, "arch", "script"], [7, "organic", "caps"]].map(([p, decor, title]) => ({ ...P[p], decor, title })));
+  const M = [
+    { n: "Белый", a: "#faf9f6", ink: "#1f1f1f", accent: "#1f1f1f" }, { n: "Слоновая кость", a: "#f6f1e7", ink: "#2b2620", accent: "#7a6347" },
+    { n: "Серый", a: "#eceae7", ink: "#262626", accent: "#262626" }, { n: "Чёрный", a: "#141414", ink: "#f2f2f2", accent: "#f2f2f2", dark: true },
+    { n: "Беж", a: "#ede4d8", ink: "#3b3027", accent: "#3b3027" }, { n: "Шалфей", a: "#e6e9e2", ink: "#28322a", accent: "#3e5a44" },
+    { n: "Пыльная роза", a: "#f1e4e1", ink: "#3d2a2a", accent: "#9b5c5c" }, { n: "Тёмно-синий", a: "#1c2433", ink: "#eef1f6", accent: "#c9d3e3", dark: true }];
+  add("minimal", "Минимализм", [[0, "frame2", "caps"], [0, "cornersThin", "caps"], [1, "frame1", "caps"], [1, "bars", "script"], [2, "sideStripe", "caps"], [2, "underline", "caps"],
+    [3, "frame2", "caps"], [3, "none", "script"], [4, "cornersThin", "script"], [4, "frame1", "caps"], [5, "bars", "caps"], [5, "frame2", "script"],
+    [6, "frame1", "script"], [6, "sideStripe", "caps"], [7, "cornersThin", "caps"], [7, "underline", "script"]].map(([p, decor, title]) => ({ ...M[p], decor, title })));
+  const B = [
+    { n: "Шалфей", a: "#e8ede2", b: "#d6dfcd", ink: "#2e392b", accent: "#4f654a", leaf: "#7f9878", leaf2: "#93aa8b" },
+    { n: "Эвкалипт", a: "#eef2ef", b: "#dbe5df", ink: "#2c3b36", accent: "#4d6d63", leaf: "#7d9c92", leaf2: "#a3bdb4" },
+    { n: "Крем", a: "#faf5ec", b: "#efe4d1", ink: "#3e3527", accent: "#6f7a4f", leaf: "#8e9a6a", leaf2: "#d9b8a0" },
+    { n: "Розовый сад", a: "#fbf0ee", b: "#f1dcd8", ink: "#4f3536", accent: "#9a5b62", leaf: "#8aa07f", leaf2: "#e3a8ae" },
+    { n: "Лес", a: "#22352b", b: "#101b15", ink: "#eef3ec", accent: "#c9d9b5", leaf: "#5f8a6a", leaf2: "#7ea486", dark: true, radial: true },
+    { n: "Лаванда", a: "#f4f1f8", b: "#e4def0", ink: "#3d3550", accent: "#6d5c93", leaf: "#8d9f84", leaf2: "#9d88c9" },
+    { n: "Олива", a: "#f1efe2", b: "#e1dcc4", ink: "#3a3824", accent: "#6b6a35", leaf: "#8b8a50", leaf2: "#aead78" },
+    { n: "Терракота", a: "#f8ede6", b: "#ecd5c6", ink: "#4a3026", accent: "#a3593a", leaf: "#8e9a72", leaf2: "#d39a7c" }];
+  add("botanic", "Ботаника", [[0, "sprigs", "caps"], [0, "eucalyptus", "script"], [1, "eucalyptus", "caps"], [1, "leavesFrame", "script"], [2, "flowers", "script"], [2, "lavender", "caps"],
+    [3, "flowers", "caps"], [3, "sprigs", "script"], [4, "sprigs", "caps"], [4, "eucalyptus", "script"], [5, "lavender", "script"], [5, "flowers", "caps"],
+    [6, "branch", "caps"], [6, "leavesFrame", "script"], [7, "branch", "script"], [7, "sprigs", "caps"]].map(([p, decor, title]) => ({ ...B[p], decor, title })));
+  const X = [
+    { n: "Закат", a: "#fff4ec", ink: "#3b2a2a", accent: "#c04a3e", cols: ["#f7b39a", "#f39ab0", "#ffd28f"] },
+    { n: "Лагуна", a: "#eef8f8", ink: "#1f3b40", accent: "#1f7a84", cols: ["#9fdcdc", "#b9c7f0", "#c8eedb"] },
+    { n: "Ягода", a: "#fbeef3", ink: "#43233a", accent: "#a8336c", cols: ["#f2a7c7", "#c9a3e6", "#ffc2b8"] },
+    { n: "Песок", a: "#f7f0e6", ink: "#3d3226", accent: "#a86b35", cols: ["#e8c49b", "#d9a982", "#f1dcb8"] },
+    { n: "Ночь", a: "#1a1726", ink: "#f3eefc", accent: "#f0a6c8", cols: ["#6c4bd1", "#d14b8f", "#3f7fd1"], dark: true },
+    { n: "Мята-лимон", a: "#f5fbef", ink: "#2c3b23", accent: "#4f7f26", cols: ["#c9eaa2", "#fdf0a0", "#a8e0c9"] },
+    { n: "Пыльный", a: "#f2ece8", ink: "#3a302d", accent: "#8d5f55", cols: ["#d8b8ad", "#b9a7b8", "#e4cbb6"] },
+    { n: "Океан", a: "#0f2230", ink: "#eaf4fb", accent: "#7fd3e8", cols: ["#1f6f8b", "#3fb5c7", "#285d9a"], dark: true }];
+  const busy = new Set(["mesh", "terrazzo", "strokes"]);
+  add("abstract", "Абстракция", [[0, "mesh", "script"], [0, "wavesBold", "caps"], [1, "arcs", "caps"], [1, "mesh", "script"], [2, "strokes", "script"], [2, "shapes", "caps"],
+    [3, "wavesBold", "script"], [3, "terrazzo", "caps"], [4, "mesh", "script"], [4, "arcs", "caps"], [5, "shapes", "caps"], [5, "strokes", "script"],
+    [6, "terrazzo", "script"], [6, "arcs", "caps"], [7, "wavesBold", "caps"], [7, "strokes", "script"]]
+    .map(([p, decor, title]) => ({ ...X[p], decor, title, panel: busy.has(decor) ? (X[p].dark ? "rgba(10,8,20,.55)" : "rgba(255,255,255,.74)") : null })));
+  const LP = "rgba(255,255,255,.45)", DP = "rgba(0,0,0,.3)";
+  add("marble", "Мрамор и текстуры", [
+    { name: "Белый мрамор", a: "#f7f6f3", b: "#ecebe7", ink: "#2a2a2a", accent: "#2a2a2a", vein: "#8f8f8f", decor: "marble", panel: LP },
+    { name: "Мрамор с золотом", a: "#f8f6f1", b: "#eeebe4", ink: "#2d2a24", accent: "gold", vein: "#9a9a9a", vein2: "#c9a960", decor: "marble", panel: LP, title: "script" },
+    { name: "Розовый мрамор", a: "#f8eeeb", b: "#f0dfda", ink: "#4b3233", accent: "#a35f63", vein: "#c99a92", decor: "marble", panel: LP, title: "script" },
+    { name: "Серый мрамор", a: "#e9e8e5", b: "#d9d8d4", ink: "#232323", accent: "#3a3a3a", vein: "#6b6b6b", decor: "marble", panel: LP },
+    { name: "Травертин", a: "#efe6d8", b: "#e2d4bf", ink: "#3e3226", accent: "#7a5c3c", vein: "#b39a78", decor: "marble", panel: LP },
+    { name: "Чёрный мрамор", a: "#1c1b1a", b: "#0d0c0c", ink: "#efe9df", accent: "gold", vein: "#8d8d8d", vein2: "#c9a960", decor: "marble", panel: DP, dark: true },
+    { name: "Зелёный мрамор", a: "#1f3d34", b: "#0e1f1a", ink: "#eef4f0", accent: "gold", vein: "#9fc7b4", decor: "marble", panel: DP, dark: true, title: "script" },
+    { name: "Синий мрамор", a: "#1d2a40", b: "#0d1420", ink: "#edf1f7", accent: "silver", vein: "#8aa3c7", decor: "marble", panel: DP, dark: true },
+    { name: "Лён светлый", a: "#f0e9dd", ink: "#3b3328", accent: "#7d6446", decor: "linen", title: "script" },
+    { name: "Лён серый", a: "#e4e2dd", ink: "#2b2b2b", accent: "#555555", decor: "linen" },
+    { name: "Крафт", a: "#dcc6a3", b: "#cfb48c", ink: "#3a2c1c", accent: "#6b4b2a", decor: "grainPaper", title: "script" },
+    { name: "Бумага", a: "#faf6ee", ink: "#2e2a24", accent: "#8a6a48", decor: "grainPaper" },
+    { name: "Бархат бордо", a: "#5a1a31", b: "#2a0a17", ink: "#f7e9ee", accent: "gold", decor: "velvet", dark: true, radial: true, title: "script" },
+    { name: "Бархат изумруд", a: "#185243", b: "#082219", ink: "#ecf5f0", accent: "gold", decor: "velvet", dark: true, radial: true },
+    { name: "Терраццо", a: "#f3efe8", ink: "#2f2a25", accent: "#a4613f", cols: ["#d9a48a", "#9fb3a6", "#e6c98f", "#b9a7c9"], decor: "terrazzoFine" },
+    { name: "Терраццо розовое", a: "#f7e9e5", ink: "#4a2f30", accent: "#a5555e", cols: ["#e7a9a5", "#c8b6d6", "#f1cfa4", "#a9c4bd"], decor: "terrazzoFine", title: "script" }]);
+  return cats;
+})();
+const THEMES = Object.fromEntries(CATS.flatMap(c => c.items.map(t => [t.id, t])));
+const OLD_IDS = { gold: "lux-0", powder: "pastel-0", minimal: "minimal-0", nude: "pastel-14", sage: "botanic-0", night: "lux-5" };
+
+function drawBg(c, t, W, H) {
+  let g;
+  if (t.radial) { g = c.createRadialGradient(W / 2, H * .35, 0, W / 2, H * .35, H * .8); g.addColorStop(0, t.a); g.addColorStop(1, t.b); }
+  else { g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, t.a); g.addColorStop(1, t.b); }
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.save(); DECOR[t.decor](c, W, H, rnd(hash(t.id)), t); c.restore();
+  if (t.panel) { c.fillStyle = t.panel; rr(c, 56, 56, W - 112, H - 112, 30); c.fill(); }
+}
 
 // ---------- состояние ----------
 const store = {
@@ -298,13 +642,14 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
 };
 const DEFAULT = () => ({
-  theme: "gold", format: "story", prof: "lash", title: "Прайс-лист", subtitle: "Наращивание ресниц", master: "", phone: "",
+  theme: "lux-0", format: "story", prof: "lash", title: "Прайс-лист", subtitle: "Наращивание ресниц", master: "", phone: "",
   currency: "руб.", services: PROFS[0].services.slice(0, 7).map(([name, price]) => ({ name, price })),
   soc: { wa: { on: false, val: "" }, tg: { on: false, val: "" }, ig: { on: false, val: "" }, max: { on: false, val: "" } },
-  qr: "none", qrUrl: "", watermark: true,
+  socLayout: "row", qr: "none", qrUrl: "", watermark: true, text: {},
 });
 let S = DEFAULT();
-try { const saved = JSON.parse(store.get("price.v1")); if (saved && Array.isArray(saved.services)) S = { ...S, ...saved, soc: { ...S.soc, ...saved.soc } }; } catch (e) {}
+try { const saved = JSON.parse(store.get("price.v1")); if (saved && Array.isArray(saved.services)) S = { ...S, ...saved, soc: { ...S.soc, ...saved.soc }, text: saved.text || {} }; } catch (e) {}
+if (!THEMES[S.theme]) S.theme = OLD_IDS[S.theme] || "lux-0";
 
 // ---------- форматы ----------
 const $ = id => document.getElementById(id);
@@ -318,6 +663,17 @@ function normPhone(s) {                                         // → 790012345
 function fmtPhone(s) {
   const d = normPhone(s);
   return d ? `+7 (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7, 9)}-${d.slice(9)}` : (s || "").trim();
+}
+function maskPhone(v, deleting) {                               // маска +7 (999) 999-99-99 прямо при вводе
+  let d = digits(v);
+  if (/^\s*\+?7/.test(v) || /^[78]/.test(d)) d = d.slice(1);
+  d = d.slice(0, 10);
+  if (!d) return deleting || !digits(v) ? "" : "+7 (";
+  let s = "+7 (" + d.slice(0, 3);
+  if (d.length > 3) s += ") " + d.slice(3, 6);
+  if (d.length > 6) s += "-" + d.slice(6, 8);
+  if (d.length > 8) s += "-" + d.slice(8, 10);
+  return s;
 }
 const group = n => n.replace(/\B(?=(\d{3})+(?!\d))/g, " ");          // 3000 → 3 000 (неразрывный пробел)
 function fmtPrice(raw) {
@@ -338,12 +694,12 @@ function socText(k) {
   if (k === "ig") return v ? handle(v, "instagram.com") : "@ник";
   return v ? (/^https?:/i.test(v) ? v.replace(/^https?:\/\/(www\.)?/i, "") : fmtPhone(v)) : (fmtPhone(S.phone) || "MAX");
 }
-function qrTarget() {                                           // ссылка для QR или "" с подсказкой, чего не хватает
+function qrTarget() {                                           // ссылка для QR или подсказка, чего не хватает
   const v = k => S.soc[k].val.trim(), user = s => s.replace(/^@/, "");
   switch (S.qr) {
     case "wa": { const d = normPhone(v("wa") || S.phone); return d ? { url: "https://wa.me/" + d, cap: "WhatsApp" } : { need: "Укажите телефон, чтобы QR вёл в WhatsApp." }; }
-    case "tg": return v("tg") ? { url: /^https?:/i.test(v("tg")) ? v("tg") : "https://t.me/" + user(v("tg")), cap: "Telegram" } : { need: "Впишите ник Telegram в соцсетях." };
-    case "ig": return v("ig") ? { url: /^https?:/i.test(v("ig")) ? v("ig") : "https://instagram.com/" + user(v("ig")), cap: "Instagram" } : { need: "Впишите ник Instagram в соцсетях." };
+    case "tg": return v("tg") ? { url: /^https?:/i.test(v("tg")) ? v("tg") : "https://t.me/" + user(v("tg")), cap: "Telegram" } : { need: "Включите Telegram и впишите ник." };
+    case "ig": return v("ig") ? { url: /^https?:/i.test(v("ig")) ? v("ig") : "https://instagram.com/" + user(v("ig")), cap: "Instagram" } : { need: "Включите Instagram и впишите ник." };
     case "max": return /^https?:/i.test(v("max")) ? { url: v("max"), cap: "MAX" } : { need: "Для QR вставьте в поле MAX ссылку на профиль (https://…)." };
     case "url": {
       const u = S.qrUrl.trim();
@@ -356,17 +712,34 @@ function qrTarget() {                                           // ссылка 
   return {};
 }
 
+// ---------- стили текста ----------
+function baseStyle(k, t) {
+  switch (k) {
+    case "title": return t.title === "script" ? { font: "Marck Script", weight: 400, italic: false, caps: false, color: t.accent } : { font: "Cormorant Garamond", weight: 600, italic: false, caps: true, color: t.accent };
+    case "subtitle": return { font: "Montserrat", weight: 500, italic: false, caps: true, color: t.muted };
+    case "master": return { font: "Cormorant Garamond", weight: 500, italic: true, caps: false, color: t.ink };
+    case "services": return { font: "Montserrat", weight: 400, italic: false, caps: false, color: t.ink };
+    case "prices": return { font: "Montserrat", weight: 600, italic: false, caps: false, color: t.accent };
+    default: return { font: "Montserrat", weight: 500, italic: false, caps: false, color: t.ink };
+  }
+}
+function style(k, t) {                                          // базовый стиль дизайна + правки пользователя
+  const b = baseStyle(k, t), o = S.text[k] || {};
+  return {
+    font: o.font || b.font, italic: o.italic ?? b.italic, caps: o.caps ?? b.caps, color: o.color || b.color,
+    weight: o.bold == null ? b.weight : (o.bold ? 700 : 400), bold: o.bold ?? b.weight >= 600, size: (o.size || 100) / 100,
+  };
+}
+const fontOf = (s, px, weight) => `${s.italic ? "italic " : ""}${weight || s.weight} ${px.toFixed(1)}px "${s.font}"`;
+const caseOf = (s, text) => s.caps ? text.toUpperCase() : text;
+const solid = c => METAL[c] ? METAL[c][4] : c;
+
 // ---------- рисование ----------
 const W = 1080, SCALE = 2;
 const canvas = $("cv"), ctx = canvas.getContext("2d");
 let H = 1920;
-const th = () => THEMES[S.theme] || THEMES.gold;
-function paint(fill, x0, x1) {
-  if (fill !== "gold") return fill;
-  const g = ctx.createLinearGradient(x0, 0, x1, 0);
-  g.addColorStop(0, "#9c7a3c"); g.addColorStop(.35, "#e0c78e"); g.addColorStop(.65, "#a8843f"); g.addColorStop(1, "#d9bd7c");
-  return g;
-}
+const th = () => THEMES[S.theme] || THEMES["lux-0"];
+const paint = (fill, x0, x1) => paintOn(ctx, fill, x0, x1);
 const sized = (font, k) => font.replace(/(\d+(?:\.\d+)?)px/, (_, n) => (n * k).toFixed(1) + "px");
 function spaced(text, cx, y, font, spacing, fill, maxW) {       // разрядка вручную — работает во всех браузерах
   ctx.font = font;
@@ -395,7 +768,6 @@ function wrap(text, maxW) {
   if (cur) lines.push(cur);
   return lines;
 }
-function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 
 const ICONS = {                                                 // свои простые значки, не логотипы
   phone: ["M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"],
@@ -418,7 +790,7 @@ function ornament(cx, y, t) {
 function drawQr(url, x, y, size, t) {
   const g = ctx.createLinearGradient(x, y, x + size, y + size);
   g.addColorStop(0, t.qrTile[0]); g.addColorStop(1, t.qrTile[1]);
-  ctx.fillStyle = g; roundRect(x, y, size, size, 16); ctx.fill();
+  ctx.fillStyle = g; rr(ctx, x, y, size, size, 16); ctx.fill();
   if (typeof qrcode !== "function") return;
   const q = qrcode(0, "M"); q.addData(url); q.make();
   const n = q.getModuleCount(), pad = size * .07, m = (size - pad * 2) / n;
@@ -427,25 +799,36 @@ function drawQr(url, x, y, size, t) {
 }
 
 function footer(t, F, P) {                                      // считает высоту подвала и умеет его нарисовать
-  const story = F === FORMATS.story;
-  const lines = [{ icon: "phone", text: fmtPhone(S.phone) || "+7 (___) ___-__-__", size: story ? 44 : 38, weight: 500, color: S.phone ? t.ink : t.muted }];
-  SOCIALS.forEach(s => { if (S.soc[s.k].on) lines.push({ icon: s.k, text: socText(s.k), size: story ? 32 : 28, weight: 400, color: t.ink }); });
-  const lh = l => l.size * 1.65, textH = lines.reduce((a, l) => a + lh(l), 0) - lines[lines.length - 1].size * .65;
-  const qr = qrTarget(), qs = F.qr, capH = 46;
+  const story = F === FORMATS.story, st = style("contacts", t), iconCol = c => (c === t.ink ? solid(t.accent) : solid(c));
+  const phoneSize = (story ? 44 : 38) * st.size, socSize = (story ? 32 : 28) * st.size;
+  const socWeight = S.text.contacts && S.text.contacts.bold != null ? st.weight : 400;
+  const phone = { icon: "phone", text: fmtPhone(S.phone) || "+7 (999) 999-99-99", size: phoneSize, weight: st.weight, color: S.phone ? st.color : t.muted };
+  const socs = SOCIALS.filter(s => S.soc[s.k].on).map(s => ({ icon: s.k, text: socText(s.k), size: socSize, weight: socWeight, color: st.color }));
+  const qr = qrTarget(), qs = F.qr, capH = 46, colW = qr.url ? W - 2 * P - qs - 44 : W - 2 * P;
+  const itemW = it => { ctx.font = fontOf(st, it.size, it.weight); return it.size * 1.3 + ctx.measureText(caseOf(st, it.text)).width; };
+  let lines = [[phone]];                                        // строки подвала: телефон, потом соцсети
+  if (S.socLayout === "col") socs.forEach(s => lines.push([s]));
+  else {
+    let cur = [], w = 0;
+    socs.forEach(s => { const sw = itemW(s); if (cur.length && w + 34 + sw > colW) { lines.push(cur); cur = []; w = 0; } w += (cur.length ? 34 : 0) + sw; cur.push(s); });
+    if (cur.length) lines.push(cur);
+  }
+  const lh = l => l[0].size * 1.65, textH = lines.reduce((a, l) => a + lh(l), 0) - lines[lines.length - 1][0].size * .65;
   const h = Math.max(textH, qr.url ? qs + capH : 0);
   return { h, draw(top) {
-    const colW = qr.url ? W - 2 * P - qs - 44 : W - 2 * P;
     let y = top + (h - textH) / 2;
-    lines.forEach(l => {
-      let font = `${l.weight} ${l.size}px "Montserrat"`, size = l.size;
-      ctx.font = font;
-      const iw = size * .9, gap = size * .4;
-      let w = ctx.measureText(l.text).width;
-      if (iw + gap + w > colW) { const k = (colW - iw - gap) / w; size *= k; font = sized(font, k); ctx.font = font; w = ctx.measureText(l.text).width; }
-      const x = qr.url ? P : W / 2 - (iw + gap + w) / 2, base = y + l.size;
-      icon(l.icon, x, base - size * .82, iw, l.color === t.ink ? (t.accent === "gold" ? "#c9a960" : t.accent) : l.color);
-      ctx.fillStyle = l.color; ctx.textAlign = "left"; ctx.fillText(l.text, x + iw + gap, base);
-      y += lh(l);
+    lines.forEach(line => {
+      const size0 = line[0].size, base = y + size0;
+      let total = line.reduce((a, it) => a + itemW(it), 0) + 34 * (line.length - 1), k = total > colW ? colW / total : 1;
+      let x = qr.url ? P : W / 2 - total * k / 2;
+      line.forEach(it => {
+        const size = it.size * k, iw = size * .9, text = caseOf(st, it.text);
+        ctx.font = fontOf(st, size, it.weight);
+        icon(it.icon, x, base - size * .82, iw, iconCol(it.color));
+        ctx.fillStyle = paint(it.color, x, x + 400); ctx.textAlign = "left"; ctx.fillText(text, x + size * 1.3, base);
+        x += size * 1.3 + ctx.measureText(text).width + 34 * k;
+      });
+      y += lh(line);
     });
     if (qr.url) {
       const qx = W - P - qs, qy = top + (h - qs - capH) / 2;
@@ -457,31 +840,34 @@ function footer(t, F, P) {                                      // считае�
 
 function services(top, bottom, t, P) {
   const items = S.services.filter(s => s.name.trim() || s.price.trim());
-  const cw = W - 2 * P, avail = bottom - top;
+  const cw = W - 2 * P, avail = bottom - top, sn = style("services", t), sp = style("prices", t);
   if (!items.length) { centered("Добавьте услуги кнопкой «+»", W / 2, (top + bottom) / 2, '400 30px "Montserrat"', t.muted); return; }
   let s, rows, lineH, gap, total;
-  for (s = 42; s >= 18; s--) {                                  // подбираем кегль, чтобы список влез
-    ctx.font = `600 ${s}px "Montserrat"`;
-    const prices = items.map(it => fmtPrice(it.price));
+  const start = Math.min(80, 42 * sn.size);
+  for (s = start; s >= 14; s -= 1) {                            // подбираем кегль, чтобы список влез
+    const ps = s * sp.size / sn.size;
+    ctx.font = fontOf(sp, ps);
+    const prices = items.map(it => caseOf(sp, fmtPrice(it.price)));
     const priceW = Math.max(0, ...prices.map(p => ctx.measureText(p).width));
-    ctx.font = `400 ${s}px "Montserrat"`;
-    rows = items.map((it, i) => ({ lines: wrap(it.name || "—", cw - priceW - 44), price: prices[i] }));
+    ctx.font = fontOf(sn, s);
+    rows = items.map((it, i) => ({ lines: wrap(caseOf(sn, it.name || "—"), cw - priceW - 44), price: prices[i] }));
     lineH = s * 1.32; gap = s * .9;
     total = rows.reduce((a, r) => a + r.lines.length * lineH, 0) + gap * (rows.length - 1);
     if (total <= avail) break;
   }
+  const ps = s * sp.size / sn.size;
   let y = top + Math.max(0, (avail - total) * .45);
   rows.forEach(r => {
-    ctx.font = `400 ${s}px "Montserrat"`; ctx.fillStyle = t.ink; ctx.textAlign = "left";
+    ctx.font = fontOf(sn, s); ctx.fillStyle = paint(sn.color, P, W - P); ctx.textAlign = "left";
     r.lines.forEach((ln, i) => ctx.fillText(ln, P, y + s + i * lineH));
     const base = y + s + (r.lines.length - 1) * lineH;
     if (r.price) {
       const endX = P + ctx.measureText(r.lines[r.lines.length - 1]).width + 14;
-      ctx.font = `600 ${s}px "Montserrat"`;
+      ctx.font = fontOf(sp, ps);
       const pw = ctx.measureText(r.price).width, px = W - P - pw;
       ctx.fillStyle = t.dots;
       for (let x = endX + 4; x < px - 14; x += 13) { ctx.beginPath(); ctx.arc(x, base - s * .12, 1.8, 0, Math.PI * 2); ctx.fill(); }
-      ctx.fillStyle = paint(t.accent, px, px + pw); ctx.fillText(r.price, px, base);
+      ctx.fillStyle = paint(sp.color, px, px + pw); ctx.fillText(r.price, px, base);
     }
     y += r.lines.length * lineH + gap;
   });
@@ -499,14 +885,17 @@ function draw() {
   if (H !== F.h || canvas.width !== W * SCALE) { H = F.h; canvas.width = W * SCALE; canvas.height = H * SCALE; }
   ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
   ctx.globalAlpha = 1; ctx.textBaseline = "alphabetic";
-  t.bg(ctx, W, H);
+  drawBg(ctx, t, W, H);
   let y = F.top;
-  const title = S.title.trim() || "Прайс-лист";
   const k = F === FORMATS.story ? 1 : .86;                      // в посте шапка чуть меньше
-  if (t.title === "script") { y += 104 * k; centered(title, W / 2, y, `${128 * k}px "Marck Script"`, t.accent, cw * k); y += 24; }
-  else { y += 78 * k; spaced(title.toUpperCase(), W / 2, y, `600 ${84 * k}px "Cormorant Garamond"`, 10, t.accent, cw * k); y += 18; }
-  if (S.subtitle.trim()) { y += 50; spaced(S.subtitle.trim().toUpperCase(), W / 2, y, '500 24px "Montserrat"', 6, t.muted, cw); }
-  y += 72; centered(S.master.trim() || "Имя мастера", W / 2, y, 'italic 500 54px "Cormorant Garamond"', S.master.trim() ? t.ink : t.muted, cw);
+  const st = style("title", t), title = caseOf(st, S.title.trim() || "Прайс-лист");
+  const tpx = (SCRIPTS.has(st.font) ? 128 : 84) * k * st.size;
+  if (st.caps && !SCRIPTS.has(st.font)) { y += tpx * .93; spaced(title, W / 2, y, fontOf(st, tpx), 10 * k * st.size, st.color, cw * k); y += 18; }
+  else { y += tpx * .81; centered(title, W / 2, y, fontOf(st, tpx), st.color, cw * k); y += 24; }
+  const ss = style("subtitle", t), spx = 24 * ss.size;
+  if (S.subtitle.trim()) { y += 26 + spx; spaced(caseOf(ss, S.subtitle.trim()), W / 2, y, fontOf(ss, spx), ss.caps ? 6 * ss.size : 0, ss.color, cw); }
+  const sm = style("master", t), mpx = 54 * sm.size;
+  y += 18 + mpx; centered(caseOf(sm, S.master.trim() || "Имя мастера"), W / 2, y, fontOf(sm, mpx), S.master.trim() ? sm.color : t.muted, cw);
   y += 48; ornament(W / 2, y, t);
   const foot = footer(t, F, P), footTop = H - F.bottom - foot.h;
   services(y + 56, footTop - 64, t, P);
@@ -514,6 +903,16 @@ function draw() {
   if (S.watermark) watermark(t);
   $("size").textContent = `Картинка ${W * SCALE} × ${H * SCALE} — для сторис, мессенджеров и печати`;
 }
+
+// ---------- вкладки ----------
+let tab = store.get("price.tab") || "content";
+function showTab(name) {
+  tab = name; store.set("price.tab", name);
+  document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name));
+  document.querySelectorAll(".tab").forEach(s => s.hidden = s.dataset.tab !== name);
+  if (name === "design") buildThumbs();
+}
+document.querySelector("nav.tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) showTab(b.dataset.tab); });
 
 // ---------- форма ----------
 let raf = 0;
@@ -525,26 +924,50 @@ function changed() {
   $("qrUrl").hidden = S.qr !== "url";
   $("qrHint").textContent = q.need || "";
 }
-const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const press = (box, key) => box.querySelectorAll("[data-k]").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === key));
 
-function buildThemes() {
-  $("themes").innerHTML = Object.entries(THEMES).map(([k, t]) =>
-    `<button type="button" class="theme" data-k="${k}" aria-pressed="${k === S.theme}"><i style="background:${t.sw}"></i>${t.name}</button>`).join("");
-  $("formats").innerHTML = Object.entries(FORMATS).map(([k, f]) =>
-    `<button type="button" data-k="${k}" aria-pressed="${k === S.format}">${f.name}</button>`).join("");
+// дизайн: формат, категории, миниатюры
+let cat = (CATS.find(c => c.items.some(t => t.id === S.theme)) || CATS[0]).id;
+function buildDesign() {
+  $("formats").innerHTML = Object.entries(FORMATS).map(([k, f]) => `<button type="button" data-k="${k}">${f.name}</button>`).join("");
+  press($("formats"), S.format);
+  $("cats").innerHTML = CATS.map(c => `<button type="button" class="chip" data-k="${c.id}">${c.name}</button>`).join("");
+  press($("cats"), cat);
 }
-$("themes").addEventListener("click", e => { const b = e.target.closest(".theme"); if (!b) return; S.theme = b.dataset.k; buildThemes(); changed(); });
-$("formats").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.format = b.dataset.k; buildThemes(); changed(); });
+function buildThumbs() {
+  const c = CATS.find(x => x.id === cat), TW = 1080, TH = 1920, px = 96 * 2;
+  $("thumbs").innerHTML = c.items.map(t => `<button type="button" class="thumb" data-id="${t.id}" title="${esc(t.name)}" aria-label="${esc(t.name)}" aria-pressed="${t.id === S.theme}"><canvas width="${px}" height="${Math.round(px * TH / TW)}"></canvas></button>`).join("");
+  $("thumbs").querySelectorAll(".thumb").forEach(b => {
+    const t = THEMES[b.dataset.id], cv = b.querySelector("canvas"), c2 = cv.getContext("2d");
+    c2.setTransform(cv.width / TW, 0, 0, cv.width / TW, 0, 0); drawBg(c2, t, TW, TH);
+    c2.fillStyle = paintOn(c2, t.accent, 300, 780); c2.fillRect(300, 190, 480, 70);   // условный заголовок и строки
+    c2.fillStyle = A(t.ink, .75);
+    for (let i = 0; i < 7; i++) { c2.fillRect(140, 560 + i * 120, 360 + (i * 97 % 160), 26); }
+    c2.fillStyle = paintOn(c2, t.accent, 760, 940);
+    for (let i = 0; i < 7; i++) c2.fillRect(780, 560 + i * 120, 160, 26);
+    c2.fillStyle = A(t.ink, .6); c2.fillRect(140, 1620, 420, 34);
+  });
+  $("themeName").textContent = "Выбрано: " + th().name;
+}
+$("formats").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; S.format = b.dataset.k; press($("formats"), S.format); changed(); });
+$("cats").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; cat = b.dataset.k; press($("cats"), cat); buildThumbs(); });
+$("thumbs").addEventListener("click", e => {
+  const b = e.target.closest(".thumb"); if (!b) return;
+  S.theme = b.dataset.id; $("thumbs").querySelectorAll(".thumb").forEach(x => x.setAttribute("aria-pressed", x === b));
+  $("themeName").textContent = "Выбрано: " + th().name; buildFonts(); changed();
+});
 
+// услуги
 function buildServices() {
   const n = S.services.length;
   $("svcs").innerHTML = n ? S.services.map((s, i) => `<div class="svc" data-i="${i}">
       <input type="text" class="name" value="${esc(s.name)}" placeholder="Название услуги" aria-label="Услуга">
       <input type="text" class="price" value="${esc(s.price)}" placeholder="цена" inputmode="numeric" aria-label="Цена">
       <span class="tools">
-        <button type="button" class="icon" data-act="up" aria-label="Выше" ${i ? "" : "disabled"}>↑</button>
-        <button type="button" class="icon" data-act="down" aria-label="Ниже" ${i < n - 1 ? "" : "disabled"}>↓</button>
-        <button type="button" class="icon" data-act="del" aria-label="Удалить">×</button>
+        <button type="button" class="icon" data-act="up" title="Выше" aria-label="Выше" ${i ? "" : "disabled"}>↑</button>
+        <button type="button" class="icon" data-act="down" title="Ниже" aria-label="Ниже" ${i < n - 1 ? "" : "disabled"}>↓</button>
+        <button type="button" class="icon del" data-act="del" title="Удалить услугу" aria-label="Удалить услугу">×</button>
       </span></div>`).join("")
     : `<div class="empty">Пока пусто — добавьте первую услугу.</div>`;
 }
@@ -560,7 +983,6 @@ $("svcs").addEventListener("click", e => {
   if (b.dataset.act === "down" && i < L.length - 1) [L[i + 1], L[i]] = [L[i], L[i + 1]];
   buildServices(); changed();
 });
-
 function buildAddList() {                                       // текущая профессия сверху, уже добавленные не показываем
   const have = new Set(S.services.map(s => s.name.trim().toLowerCase()));
   const order = [...PROFS].sort((a, b) => (b.id === S.prof) - (a.id === S.prof));
@@ -571,10 +993,12 @@ function buildAddList() {                                       // текуща�
       return opts ? `<optgroup label="${esc(p.name)}">${opts}</optgroup>` : "";
     }).join("");
 }
+function showAdd(on) { $("addRow").hidden = !on; $("addBtn").hidden = on; }
 $("addBtn").addEventListener("click", () => {
-  buildAddList(); const sel = $("addSel"); sel.hidden = !sel.hidden;
-  if (!sel.hidden) { sel.value = ""; sel.focus(); if (sel.showPicker) try { sel.showPicker(); } catch (e) {} }
+  buildAddList(); showAdd(true); const sel = $("addSel"); sel.value = ""; sel.focus();
+  if (sel.showPicker) try { sel.showPicker(); } catch (e) {}
 });
+$("addCancel").addEventListener("click", () => showAdd(false));
 $("addSel").addEventListener("change", e => {
   const v = e.target.value; if (!v) return;
   if (v === "__custom") S.services.push({ name: "", price: "" });
@@ -582,35 +1006,84 @@ $("addSel").addEventListener("change", e => {
     const [pid, name] = v.split("|"), p = PROFS.find(x => x.id === pid), svc = p.services.find(([n]) => n === name);
     S.services.push({ name, price: svc ? svc[1] : "" });
   }
-  e.target.hidden = true; buildServices(); changed();
+  showAdd(false); buildServices(); changed();
   const rows = $("svcs").querySelectorAll(".svc"), last = rows[rows.length - 1];
   if (last) (v === "__custom" ? last.querySelector(".name") : last.querySelector(".price")).focus();
 });
 
+// контакты и соцсети
 function buildSocs() {
-  $("socs").innerHTML = SOCIALS.map(s => `<div class="soc">
-      <label class="check"><input type="checkbox" data-k="${s.k}" ${S.soc[s.k].on ? "checked" : ""}> ${s.name}</label>
-      <input type="text" data-k="${s.k}" value="${esc(S.soc[s.k].val)}" placeholder="${s.ph}" aria-label="${s.name}" ${S.soc[s.k].on ? "" : "hidden"}>
+  $("socchips").innerHTML = SOCIALS.map(s => `<button type="button" class="chip" data-k="${s.k}" aria-pressed="${S.soc[s.k].on}">${s.name}</button>`).join("");
+  $("socs").innerHTML = SOCIALS.filter(s => S.soc[s.k].on).map(s => `<div class="socin">
+      <label for="soc-${s.k}">${s.name}</label>
+      <input type="${s.k === "wa" ? "tel" : "text"}" id="soc-${s.k}" data-k="${s.k}" value="${esc(S.soc[s.k].val)}" placeholder="${s.ph}" ${s.k === "wa" ? 'inputmode="tel" maxlength="18"' : ""}>
     </div>`).join("");
+  press($("socLayout"), S.socLayout);
 }
+$("socchips").addEventListener("click", e => {
+  const b = e.target.closest("[data-k]"); if (!b) return;
+  const k = b.dataset.k; S.soc[k].on = !S.soc[k].on; buildSocs(); changed();
+  if (S.soc[k].on) $("soc-" + k).focus();
+});
 $("socs").addEventListener("input", e => {
   const k = e.target.dataset.k; if (!k) return;
-  if (e.target.type === "checkbox") {
-    S.soc[k].on = e.target.checked;
-    const inp = e.target.closest(".soc").querySelector('input[type="text"]'); inp.hidden = !e.target.checked;
-    if (e.target.checked) inp.focus();
-  } else S.soc[k].val = e.target.value;
+  if (k === "wa") e.target.value = maskPhone(e.target.value, (e.inputType || "").startsWith("delete"));
+  S.soc[k].val = e.target.value; changed();
+});
+$("socLayout").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; S.socLayout = b.dataset.k; press($("socLayout"), S.socLayout); changed(); });
+$("phone").addEventListener("input", e => { e.target.value = maskPhone(e.target.value, (e.inputType || "").startsWith("delete")); S.phone = e.target.value; changed(); });
+
+// шрифты
+function buildFonts() {
+  const t = th();
+  $("tstyles").innerHTML = TEXTS.map(({ k, name }) => {
+    const s = style(k, t), o = S.text[k] || {}, col = /^#[0-9a-f]{6}$/i.test(solid(s.color)) ? solid(s.color) : "#888888";
+    return `<div class="tstyle" data-k="${k}">
+      <div class="thead"><span>${name}</span><button type="button" class="linkbtn" data-act="reset">сбросить</button></div>
+      <div class="trow">
+        <select class="tfont" aria-label="Шрифт: ${name}"><option value="">Как в дизайне (${s.font})</option>${FONTS.map(f => `<option value="${f}" ${o.font === f ? "selected" : ""} style="font-family:'${f}'">${f}</option>`).join("")}</select>
+        <input type="color" class="tcolor" value="${col}" aria-label="Цвет: ${name}" title="Цвет">
+      </div>
+      <div class="trow">
+        <input type="range" class="tsize" min="60" max="160" step="5" value="${o.size || 100}" aria-label="Размер: ${name}">
+        <span class="tval">${o.size || 100}%</span>
+        <button type="button" class="tog" data-p="bold" aria-pressed="${s.bold}" title="Жирный"><b>Ж</b></button>
+        <button type="button" class="tog" data-p="italic" aria-pressed="${s.italic}" title="Курсив"><i>К</i></button>
+        <button type="button" class="tog" data-p="caps" aria-pressed="${s.caps}" title="Заглавные буквы">АА</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+const textOf = el => { const k = el.closest(".tstyle").dataset.k; S.text[k] = S.text[k] || {}; return [k, S.text[k]]; };
+function loadFont(k) { const s = style(k, th()); document.fonts.load(fontOf(s, 40), "Прайс 123").catch(() => {}).then(changed); }
+$("tstyles").addEventListener("input", e => {
+  if (!e.target.closest(".tstyle")) return;
+  const [k, o] = textOf(e.target);
+  if (e.target.classList.contains("tsize")) { o.size = +e.target.value; e.target.nextElementSibling.textContent = o.size + "%"; }
+  if (e.target.classList.contains("tcolor")) o.color = e.target.value;
   changed();
 });
+$("tstyles").addEventListener("change", e => {
+  if (!e.target.classList.contains("tfont")) return;
+  const [k, o] = textOf(e.target); o.font = e.target.value; loadFont(k);
+});
+$("tstyles").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || !b.closest(".tstyle")) return;
+  const [k, o] = textOf(b);
+  if (b.dataset.act === "reset") { delete S.text[k]; buildFonts(); changed(); return; }
+  const p = b.dataset.p, cur = style(k, th())[p];
+  o[p] = !cur; b.setAttribute("aria-pressed", o[p]); loadFont(k);
+});
+$("resetAll").addEventListener("click", () => { S.text = {}; buildFonts(); changed(); });
 
+// шапка и прочее
 $("prof").innerHTML = PROFS.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
 $("prof").addEventListener("change", e => {
   const old = PROFS.find(p => p.id === S.prof), now = PROFS.find(p => p.id === e.target.value);
   if (!S.subtitle.trim() || (old && S.subtitle === old.subtitle)) { S.subtitle = now.subtitle; $("subtitle").value = S.subtitle; }
   S.prof = now.id; changed();
 });
-["title", "subtitle", "master", "phone", "qrUrl"].forEach(id => $(id).addEventListener("input", e => { S[id] = e.target.value; changed(); }));
-$("phone").addEventListener("blur", e => { if (normPhone(e.target.value)) { S.phone = e.target.value = fmtPhone(e.target.value); changed(); } });
+["title", "subtitle", "master", "qrUrl"].forEach(id => $(id).addEventListener("input", e => { S[id] = e.target.value; changed(); }));
 $("currency").addEventListener("change", e => { S.currency = e.target.value; changed(); });
 $("qr").addEventListener("change", e => { S.qr = e.target.value; changed(); if (S.qr === "url") $("qrUrl").focus(); });
 $("watermark").addEventListener("change", e => { S.watermark = e.target.checked; changed(); });
@@ -618,13 +1091,17 @@ $("watermark").addEventListener("change", e => { S.watermark = e.target.checked;
 // ---------- сохранить и отправить ----------
 function setStatus(text, kind) { const s = $("status"); s.textContent = text; s.className = "status" + (kind ? " " + kind : ""); }
 function ready() {
-  if (!S.master.trim()) { setStatus("Укажите имя мастера.", "err"); $("master").focus(); return false; }
-  if (!S.phone.trim()) { setStatus("Укажите телефон.", "err"); $("phone").focus(); return false; }
-  if (!S.services.some(s => s.name.trim())) { setStatus("Добавьте хотя бы одну услугу.", "err"); return false; }
+  const go = (t, id) => { setStatus(t, "err"); showTab("content"); if (id) $(id).focus(); return false; };
+  if (!S.master.trim()) return go("Укажите имя мастера.", "master");
+  if (!normPhone(S.phone)) return go("Укажите телефон полностью: +7 (999) 999-99-99.", "phone");
+  if (!S.services.some(s => s.name.trim())) return go("Добавьте хотя бы одну услугу.");
   setStatus(""); return true;
 }
 const fileName = () => `Прайс_${S.master.trim().replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, "_") || "мастер"}.png`;
-const blobNow = () => { draw(); return new Promise(r => canvas.toBlob(r, "image/png")); };
+const blobNow = async () => {                                   // ждём шрифты, иначе в картинку попадёт запасной
+  await document.fonts.ready; draw();
+  return new Promise(r => canvas.toBlob(r, "image/png"));
+};
 $("download").addEventListener("click", async () => {
   if (!ready()) return;
   const b = await blobNow(), a = document.createElement("a");
@@ -640,17 +1117,17 @@ $("share").addEventListener("click", async () => {
 });
 
 // ---------- старт ----------
+S.phone = maskPhone(S.phone);
 ["title", "subtitle", "master", "phone", "qrUrl"].forEach(id => $(id).value = S[id]);
 $("prof").value = S.prof; $("currency").value = S.currency; $("qr").value = S.qr; $("watermark").checked = S.watermark;
-buildThemes(); buildServices(); buildSocs(); changed();
+buildDesign(); buildServices(); buildSocs(); buildFonts(); showTab(tab); changed();
+const used = TEXTS.map(({ k }) => fontOf(style(k, th()), 40));
 Promise.all([
+  ...used.map(f => document.fonts.load(f, "Прайс-лист 0123456789")),
   document.fonts.load('600 84px "Cormorant Garamond"', "ПРАЙС-ЛИСТ"),
-  document.fonts.load('italic 500 54px "Cormorant Garamond"', "Имя мастера"),
   document.fonts.load('128px "Marck Script"', "Прайс-лист"),
-  document.fonts.load('400 30px "Montserrat"', "Услуги 0123456789"),
-  document.fonts.load('500 30px "Montserrat"', "ТЕЛЕФОН +7"),
   document.fonts.load('600 30px "Montserrat"', "3 000 руб. ₽ ОБРАЗЕЦ"),
-]).catch(() => {}).then(changed);
+]).catch(() => {}).then(() => { changed(); if (tab === "design") buildThumbs(); });
 </script>
 </body>
 </html>
