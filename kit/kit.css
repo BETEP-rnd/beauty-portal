@@ -43,7 +43,7 @@ h2 { margin: 0; font-size: 12px; letter-spacing: .2em; text-transform: uppercase
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 label, .lbl { font-size: 12px; color: var(--muted); }
 .req::after { content: " *"; color: var(--bad); }
-input[type="text"], input[type="tel"], input[type="url"], input[type="date"], input[type="time"], select {
+input[type="text"], input[type="tel"], input[type="url"], input[type="email"], input[type="date"], input[type="time"], select {
   width: 100%; font: inherit; font-size: 16px; color: var(--text); background: var(--field);
   border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; min-width: 0;
 }

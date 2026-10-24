@@ -82,14 +82,18 @@
 
   // ---------- профиль мастера: один на все разделы ----------
   const PROFILE_KEY = "beauty.profile";
+  // кабинет по умолчанию — Лариса (заказчица); пустой профиль заполняется её данными
+  const PRESET = { master: "Лариса Чурилова", phone: "+7 (906) 091-85-93", email: "", showEmail: false,
+    soc: { wa: { on: false, val: "" }, tg: { on: true, val: "@Lara_lashes" }, ig: { on: false, val: "" }, max: { on: false, val: "" } },
+    socLayout: "row", qr: "tg", qrUrl: "" };
   function loadProfile() {
-    const p = { master: "", phone: "", soc: { wa: { on: false, val: "" }, tg: { on: false, val: "" }, ig: { on: false, val: "" }, max: { on: false, val: "" } },
+    const p = { master: "", phone: "", email: "", showEmail: false, soc: { wa: { on: false, val: "" }, tg: { on: false, val: "" }, ig: { on: false, val: "" }, max: { on: false, val: "" } },
       socLayout: "row", qr: "none", qrUrl: "" };
-    const saved = loadJSON(PROFILE_KEY) || loadJSON("price.v1");   // прайс до появления профиля хранил контакты у себя
-    if (saved) {
-      ["master", "phone", "socLayout", "qr", "qrUrl"].forEach(k => { if (typeof saved[k] === "string") p[k] = saved[k]; });
-      if (saved.soc) SOCIALS.forEach(({ k }) => { if (saved.soc[k]) p.soc[k] = { on: !!saved.soc[k].on, val: saved.soc[k].val || "" }; });
-    }
+    let saved = loadJSON(PROFILE_KEY) || loadJSON("price.v1");     // прайс до появления профиля хранил контакты у себя
+    if (!saved || (!(saved.master || "").trim() && !digits(saved.phone))) saved = PRESET;
+    ["master", "phone", "email", "socLayout", "qr", "qrUrl"].forEach(k => { if (typeof saved[k] === "string") p[k] = saved[k]; });
+    p.showEmail = !!saved.showEmail;
+    if (saved.soc) SOCIALS.forEach(({ k }) => { if (saved.soc[k]) p.soc[k] = { on: !!saved.soc[k].on, val: saved.soc[k].val || "" }; });
     p.phone = maskPhone(p.phone);
     return p;
   }
@@ -122,6 +126,7 @@
     tg: ["M21.4 3.6 2.9 10.8c-.9.4-.8 1.6.1 1.9l4.6 1.4 1.7 5.6c.2.7 1.1.9 1.6.4l2.6-2.5 4.7 3.5c.6.4 1.5.1 1.6-.6l2.9-15.6c.2-.9-.6-1.6-1.4-1.3z", "M7.6 14.1l9.6-6.6-6.5 7.5"],
     ig: ["M7 2.5h10A4.5 4.5 0 0 1 21.5 7v10a4.5 4.5 0 0 1-4.5 4.5H7A4.5 4.5 0 0 1 2.5 17V7A4.5 4.5 0 0 1 7 2.5z", "M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z", "M17.5 6.3v.1"],
     max: ["M12 2.5a9.5 9.5 0 1 1-4.4 17.9L3 21.5l1.2-4.3A9.5 9.5 0 0 1 12 2.5z", "M8 15V9l4 4 4-4v6"],
+    mail: ["M3.5 5.5h17a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-17a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1z", "M3 6.5l9 7 9-7"],
   };
   function painter(ctx) {
     const paint = (fill, x0, x1) => paintOn(ctx, fill, x0, x1);
@@ -206,6 +211,7 @@
     const socWeight = st.overBold ? st.weight : 400;
     const phone = { icon: "phone", text: fmtPhone(prof.phone) || "+7 (999) 999-99-99", size: phoneSize, weight: st.weight, color: prof.phone ? st.color : t.muted };
     const socs = SOCIALS.filter(s => prof.soc[s.k].on).map(s => ({ icon: s.k, text: socText(prof, s.k), size: socSize, weight: socWeight, color: st.color }));
+    if (prof.showEmail && (prof.email || "").trim()) socs.push({ icon: "mail", text: prof.email.trim(), size: socSize, weight: socWeight, color: st.color });
     const qr = qrTarget(prof), qs = F.qr, capH = 46, colW = qr.url ? W - 2 * P - qs - 44 : W - 2 * P;
     const itemW = it => { ctx.font = fontOf(st, it.size, it.weight); return it.size * 1.3 + ctx.measureText(caseOf(st, it.text)).width; };
     const lines = [[phone]];                                    // строки подвала: телефон, потом соцсети
@@ -350,6 +356,8 @@
       <span class="hint">Общие для всех разделов — заполняются один раз.</span>
       <div class="field"><label for="k-master" class="req">Имя мастера</label><input id="k-master" type="text" maxlength="40" placeholder="Например, Лариса Чурилова"></div>
       <div class="field"><label for="k-phone" class="req">Телефон</label><input id="k-phone" type="tel" inputmode="tel" placeholder="+7 (999) 999-99-99" maxlength="18"></div>
+      <div class="field"><label for="k-email">Почта</label><input id="k-email" type="email" inputmode="email" autocomplete="email" placeholder="name@mail.ru">
+        <label class="check"><input type="checkbox" id="k-showEmail"> показывать почту на картинке</label></div>
       <span class="lbl">Соцсети — любые или ни одной</span>
       <div class="socchips" data-role="chips"></div>
       <div class="svcs" data-role="socs"></div>
@@ -372,7 +380,9 @@
     }
     function refresh() { $i("qrUrl").hidden = prof.qr !== "url"; $r("qrHint").textContent = qrTarget(prof).need || ""; }
     const deleting = e => (e.inputType || "").startsWith("delete");
-    $i("master").value = prof.master; $i("phone").value = prof.phone; $i("qr").value = prof.qr; $i("qrUrl").value = prof.qrUrl;
+    $i("master").value = prof.master; $i("phone").value = prof.phone; $i("email").value = prof.email; $i("showEmail").checked = prof.showEmail;
+    $i("email").addEventListener("input", e => { prof.email = e.target.value; changed(); });
+    $i("showEmail").addEventListener("change", e => { prof.showEmail = e.target.checked; changed(); }); $i("qr").value = prof.qr; $i("qrUrl").value = prof.qrUrl;
     $i("master").addEventListener("input", e => { prof.master = e.target.value; changed(); });
     $i("phone").addEventListener("input", e => { e.target.value = maskPhone(e.target.value, deleting(e)); prof.phone = e.target.value; changed(); });
     $i("qr").addEventListener("change", e => { prof.qr = e.target.value; changed(); if (prof.qr === "url") $i("qrUrl").focus(); });
@@ -426,6 +436,6 @@
     W, SCALE, FORMATS, FONTS, SCRIPTS, SOCIALS, store, loadJSON, esc,
     digits, normPhone, fmtPhone, maskPhone, group, socText, qrTarget, loadProfile, saveProfile,
     baseStyle, styleOf, fontOf, caseOf, painter, header, footer, press,
-    tabs, designPanel, fontsPanel, contactsPanel, output, profileError, safeName,
+    tabs, designPanel, fontsPanel, contactsPanel, output, profileError, safeName, PRESET,
   });
 })();
