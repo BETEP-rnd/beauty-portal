@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f3ee">
+<title>Онлайн-запись</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Montserrat:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../kit/kit.css?v=202610251211">
+<script>try { var u = localStorage.getItem("beauty.ui"); if (u) document.documentElement.dataset.ui = u; } catch (e) {}</script>
+<style>
+  /* Страница записи глазами клиента: шаги сверху вниз — услуга, день, время, контакты. */
+  .book { max-width: 680px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+  .demo { border: 1px dashed var(--accent); border-radius: 12px; padding: 12px 16px; font-size: 13.5px; line-height: 1.5; color: var(--page-text, var(--text)); }
+  .master { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; display: flex; flex-direction: column; gap: 6px; }
+  .master .who { font-family: var(--display); font-style: italic; font-size: 32px; line-height: 1.1; }
+  .master .facts { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); font-size: 14px; }
+  .step { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px 22px; display: flex; flex-direction: column; gap: 12px; }
+  .step.off { opacity: .45; pointer-events: none; }
+  .step h2 { display: flex; gap: 10px; align-items: center; }
+  .step h2 i { font-style: normal; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: inline-grid; place-items: center; font-size: 12px; letter-spacing: 0; }
+  .pick { font-size: 13.5px; color: var(--muted); }
+  .svc-list { display: flex; flex-direction: column; gap: 8px; }
+  .svc-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; text-align: left; border: 1px solid var(--line); background: var(--field); color: var(--text); border-radius: 10px; padding: 12px 14px; font: inherit; cursor: pointer; }
+  .svc-item b { font-weight: 500; }
+  .svc-item .price { color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .svc-item .dur { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); }
+  .svc-item[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .days-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; }
+  .day-btn { flex: 0 0 auto; width: 72px; border: 1px solid var(--line); background: var(--field); color: var(--text); border-radius: 12px; padding: 10px 4px; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .day-btn small { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .day-btn b { font-size: 20px; font-weight: 600; }
+  .day-btn span { font-size: 11.5px; color: var(--muted); }
+  .day-btn:disabled { opacity: .35; cursor: default; }
+  .day-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .day-btn[aria-pressed="true"] small, .day-btn[aria-pressed="true"] span { color: inherit; opacity: .85; }
+  .times { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 8px; }
+  .time-btn { border: 1px solid var(--line); background: var(--field); color: var(--text); border-radius: 10px; padding: 11px 4px; font: inherit; font-size: 15px; cursor: pointer; }
+  .time-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .summary { border-left: 3px solid var(--accent); padding: 6px 12px; font-size: 14.5px; line-height: 1.6; }
+  textarea { width: 100%; font: inherit; font-size: 16px; color: var(--text); background: var(--field); border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; min-height: 70px; resize: vertical; }
+  .done { text-align: center; align-items: center; }
+  .master, .step { color: var(--text); }
+  .demo a { color: var(--accent); }
+  .done .big { font-family: var(--display); font-size: 34px; color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Онлайн-запись</h1>
+    <nav><a href="../">Кабинет</a><a href="../price/">Прайс-лист</a><a href="../windows/">Свободные окошки</a><a href="../certs/">Сертификаты</a><a href="../booking/" aria-current="page">Онлайн-запись</a></nav>
+  </header>
+
+  <div class="book">
+    <div class="demo" id="demo"></div>
+
+    <div class="master">
+      <span class="lbl">Запись к мастеру</span>
+      <div class="who" id="who"></div>
+      <div class="facts" id="facts"></div>
+    </div>
+
+    <section class="step" id="s1">
+      <h2><i>1</i>Услуга</h2>
+      <div class="svc-list" id="svcs"></div>
+    </section>
+
+    <section class="step off" id="s2">
+      <h2><i>2</i>День</h2>
+      <div class="pick" id="dayHint">Сначала выберите услугу.</div>
+      <div class="days-strip" id="days"></div>
+    </section>
+
+    <section class="step off" id="s3">
+      <h2><i>3</i>Время</h2>
+      <div class="pick" id="timeHint">Выберите день.</div>
+      <div class="times" id="times"></div>
+    </section>
+
+    <section class="step off" id="s4">
+      <h2><i>4</i>Ваши контакты</h2>
+      <div class="summary" id="summary"></div>
+      <div class="field"><label for="cName" class="req">Имя</label><input id="cName" type="text" maxlength="40" autocomplete="name" placeholder="Как к вам обращаться"></div>
+      <div class="field"><label for="cPhone" class="req">Телефон</label><input id="cPhone" type="tel" inputmode="tel" maxlength="18" autocomplete="tel" placeholder="+7 (999) 999-99-99"></div>
+      <div class="field"><label for="cNote">Комментарий</label><textarea id="cNote" maxlength="300" placeholder="Например: первый раз, нужна консультация"></textarea></div>
+      <label class="check"><input type="checkbox" id="cAgree"> Согласна(ен) на обработку персональных данных для записи</label>
+      <button class="btn" type="button" id="send">Записаться</button>
+      <div class="status" id="status" role="status"></div>
+    </section>
+
+    <section class="step done" id="done" hidden>
+      <div class="big">Вы записаны!</div>
+      <div class="summary" id="doneText" style="text-align:left"></div>
+      <div class="hint" id="doneHint"></div>
+      <button class="btn ghost" type="button" id="again">Записаться ещё</button>
+    </section>
+  </div>
+</div>
+
+<script src="../kit/backgrounds.js?v=202610251211"></script>
+<script src="../kit/kit.js?v=202610251211"></script>
+<script>
+// Демо: окошки берутся из раздела «Свободные окошки», услуги и цены — из «Прайс-листа» этого браузера.
+// Запись никуда не отправляется и не сохраняется.
+const $ = id => document.getElementById(id);
+const { esc, fmtPhone, maskPhone, normPhone, group } = Kit;
+const DOW = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+const DOW_LONG = ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"];
+const MON = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+const MON_SHORT = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+const pad = n => String(n).padStart(2, "0");
+const toIso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromIso = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (iso, n) => { const d = fromIso(iso); d.setDate(d.getDate() + n); return toIso(d); };
+const hm = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+const durText = m => m < 60 ? `${m} мин` : m % 60 ? `${Math.floor(m / 60)} ч ${m % 60} мин` : `${m / 60} ч`;
+const today = toIso(new Date()), STEP = 30;
+
+const prof = Kit.loadProfile();
+const price = Kit.loadJSON("price.v1"), win = Kit.loadJSON("windows.v1");
+
+// услуги: из прайса; длительность для примера — по названию (у прайса её пока нет)
+function guessDur(name) {
+  const n = name.toLowerCase();
+  if (/сняти/.test(n)) return 30;
+  if (/нижн/.test(n)) return 60;
+  if (/угол/.test(n)) return 90;
+  if (/4d/.test(n)) return 180;                                 // «4D–5D»; «1,5D» и «2,5D» тоже содержат «5d», поэтому проверяем по 4d
+  if (/2,5d|3d|1,5d|2d/.test(n)) return 150;
+  if (/1d|классик/.test(n)) return 120;
+  if (/ламинир|окраш|ботокс|коррекц/.test(n)) return 60;
+  return 90;
+}
+const DEFAULT_SVCS = [["Уголки", "2100"], ["Наращивание нижних ресниц", "1000"], ["Объём 1D (классика)", "3000"], ["Объём 1,5D–2D", "3300"],
+  ["Объём 2,5D–3D", "3600"], ["Объём 4D–5D", "4000"], ["Снятие ресниц без последующего наращивания", "500"]];
+const SVCS = ((price && price.services && price.services.length) ? price.services.map(s => [s.name, s.price]) : DEFAULT_SVCS)
+  .filter(([n]) => n && n.trim()).map(([name, p]) => ({ name: name.trim(), price: (p || "").trim(), dur: guessDur(name) }));
+const money = p => !p ? "" : /₽|руб/i.test(p) || !/\d/.test(p) ? p : p.replace(/\d{4,}/g, group) + " " + ((price && price.currency) || "руб.");
+
+// окошки: из раздела «Свободные окошки»; если там пусто — пример на две недели
+let demoWindows = false;
+function windowsByDay() {
+  const out = {};
+  const toMin = s => { const [h, m] = (s || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
+  if (win && win.free) {
+    const a = toMin(win.dayStart || "10:00"), b = toMin(win.dayEnd || "18:00");
+    Object.entries(win.free).forEach(([iso, list]) => {
+      if (iso < today) return;
+      const iv = list.map(([s, e]) => [Math.max(s, a), Math.min(e, b)]).filter(([s, e]) => e > s);
+      if (iv.length) out[iso] = iv;
+    });
+  }
+  if (Object.keys(out).length) return out;
+  demoWindows = true;                                           // пример: 10:00–13:00 и 15:00–18:00 через день, по воскресеньям выходной
+  for (let i = 1; i <= 14; i++) {
+    const iso = addDays(today, i), dow = fromIso(iso).getDay();
+    if (dow === 0) continue;
+    out[iso] = i % 3 === 0 ? [[600, 1080]] : i % 2 ? [[600, 780], [900, 1080]] : [[720, 1020]];
+  }
+  return out;
+}
+const WIN = windowsByDay();
+// времена начала, когда услуга целиком помещается в окно
+const startsFor = (iso, dur) => (WIN[iso] || []).flatMap(([s, e]) => { const out = []; for (let t = s; t + dur <= e; t += STEP) out.push(t); return out; });
+
+// ---------- шаги ----------
+const sel = { svc: null, day: null, time: null };
+function step(id, on) { $(id).classList.toggle("off", !on); }
+function buildHeader() {
+  $("who").textContent = prof.master.trim() || "Имя мастера";
+  const facts = [fmtPhone(prof.phone)];
+  Kit.SOCIALS.forEach(s => { if (prof.soc[s.k].on) facts.push(`${s.name}: ${Kit.socText(prof, s.k)}`); });
+  $("facts").innerHTML = facts.filter(Boolean).map(f => `<span>${esc(f)}</span>`).join("");
+  $("demo").innerHTML = `<b>Демо.</b> Так страницу записи увидят клиенты. Услуги и цены — из «Прайс-листа», окошки — из «Свободных окошек»`
+    + (demoWindows ? ` (там пока пусто, поэтому показан пример на две недели — <a href="../windows/">отметить свои окошки</a>)` : "")
+    + `. Длительность услуг пока примерная. Запись никуда не отправляется и не сохраняется.`;
+}
+function buildServices() {
+  $("svcs").innerHTML = SVCS.map((s, i) => `<button type="button" class="svc-item" data-i="${i}" aria-pressed="${sel.svc === i}">
+      <b>${esc(s.name)}</b><span class="price">${esc(money(s.price))}</span><span class="dur">≈ ${durText(s.dur)}</span></button>`).join("");
+}
+function buildDays() {
+  const s = SVCS[sel.svc], days = Object.keys(WIN).sort();
+  $("days").innerHTML = days.map(iso => {
+    const d = fromIso(iso), n = startsFor(iso, s.dur).length;
+    return `<button type="button" class="day-btn" data-iso="${iso}" ${n ? "" : "disabled"} aria-pressed="${sel.day === iso}">
+      <small>${DOW[d.getDay()]}</small><b>${d.getDate()}</b><span>${n ? MON_SHORT[d.getMonth()] : "нет мест"}</span></button>`;
+  }).join("");
+  const any = days.some(iso => startsFor(iso, s.dur).length);
+  $("dayHint").textContent = any ? `Дни, когда «${s.name}» (≈ ${durText(s.dur)}) помещается в свободное время.` : "Для этой услуги свободного времени пока нет — напишите мастеру.";
+}
+function buildTimes() {
+  const s = SVCS[sel.svc], d = fromIso(sel.day), list = startsFor(sel.day, s.dur);
+  $("timeHint").textContent = `${DOW_LONG[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]} — начало процедуры:`;
+  $("times").innerHTML = list.map(t => `<button type="button" class="time-btn" data-t="${t}" aria-pressed="${sel.time === t}">${hm(t)}</button>`).join("");
+}
+function summaryText() {
+  const s = SVCS[sel.svc], d = fromIso(sel.day);
+  return `<b>${esc(s.name)}</b>${s.price ? " · " + esc(money(s.price)) : ""}<br>${DOW_LONG[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]}, ${hm(sel.time)}–${hm(sel.time + s.dur)}`;
+}
+$("svcs").addEventListener("click", e => {
+  const b = e.target.closest(".svc-item"); if (!b) return;
+  sel.svc = +b.dataset.i; sel.day = null; sel.time = null;
+  buildServices(); buildDays(); $("times").innerHTML = ""; $("timeHint").textContent = "Выберите день.";
+  step("s2", true); step("s3", false); step("s4", false);
+  $("s2").scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+$("days").addEventListener("click", e => {
+  const b = e.target.closest(".day-btn"); if (!b || b.disabled) return;
+  sel.day = b.dataset.iso; sel.time = null;
+  buildDays(); buildTimes(); step("s3", true); step("s4", false);
+  $("s3").scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+$("times").addEventListener("click", e => {
+  const b = e.target.closest(".time-btn"); if (!b) return;
+  sel.time = +b.dataset.t; buildTimes();
+  $("summary").innerHTML = summaryText(); step("s4", true);
+  $("s4").scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+$("cPhone").addEventListener("input", e => { e.target.value = maskPhone(e.target.value, (e.inputType || "").startsWith("delete")); });
+function setStatus(text, kind) { $("status").textContent = text; $("status").className = "status" + (kind ? " " + kind : ""); }
+$("send").addEventListener("click", () => {
+  if (!$("cName").value.trim()) { setStatus("Укажите имя.", "err"); $("cName").focus(); return; }
+  if (!normPhone($("cPhone").value)) { setStatus("Укажите телефон полностью.", "err"); $("cPhone").focus(); return; }
+  if (!$("cAgree").checked) { setStatus("Нужно согласие на обработку данных.", "err"); return; }
+  setStatus("");
+  $("doneText").innerHTML = `${summaryText()}<br>Мастер: ${esc(prof.master.trim())}, ${esc(fmtPhone(prof.phone))}<br>Вы: ${esc($("cName").value.trim())}, ${esc(fmtPhone($("cPhone").value))}`;
+  $("doneHint").textContent = "Демо: в рабочей версии мастер сразу получит заявку (например, в Telegram), а это время исчезнет из свободных. Сейчас запись нигде не сохраняется.";
+  ["s1", "s2", "s3", "s4"].forEach(id => $(id).hidden = true); $("done").hidden = false;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+$("again").addEventListener("click", () => {
+  sel.svc = sel.day = sel.time = null; $("cName").value = ""; $("cPhone").value = ""; $("cNote").value = ""; $("cAgree").checked = false;
+  ["s1", "s2", "s3", "s4"].forEach(id => $(id).hidden = false); $("done").hidden = true;
+  buildServices(); $("days").innerHTML = ""; $("times").innerHTML = ""; $("dayHint").textContent = "Сначала выберите услугу."; $("timeHint").textContent = "Выберите день.";
+  step("s2", false); step("s3", false); step("s4", false);
+});
+
+buildHeader(); buildServices();
+</script>
+</body>
+</html>
