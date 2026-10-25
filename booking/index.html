@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f7f3ee">
 <title>Онлайн-запись</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Montserrat:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="../kit/kit.css?v=202610251211">
+<link rel="stylesheet" href="../kit/kit.css?v=202610251217">
 <script>try { var u = localStorage.getItem("beauty.ui"); if (u) document.documentElement.dataset.ui = u; } catch (e) {}</script>
 <style>
   /* Страница записи глазами клиента: шаги сверху вниз — услуга, день, время, контакты. */
@@ -41,6 +41,22 @@
   textarea { width: 100%; font: inherit; font-size: 16px; color: var(--text); background: var(--field); border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; min-height: 70px; resize: vertical; }
   .done { text-align: center; align-items: center; }
   .master, .step { color: var(--text); }
+  .modes { display: flex; border: 1px solid var(--page-line, var(--line)); border-radius: 12px; overflow: hidden; }
+  .modes button { flex: 1; border: 0; background: var(--panel); color: var(--text); font: inherit; font-size: 14.5px; padding: 12px 8px; cursor: pointer; }
+  .modes button + button { border-left: 1px solid var(--line); }
+  .modes button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cal-head b { font-size: 16px; text-transform: capitalize; }
+  .cal-head .icon { width: 40px; }
+  .cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+  .cal .wd { text-align: center; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding-bottom: 2px; }
+  .cal-day { aspect-ratio: 1; border: 1px solid transparent; border-radius: 10px; background: none; color: var(--text); font: inherit; font-size: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 0; }
+  .cal-day:disabled { color: var(--muted); opacity: .45; cursor: default; }
+  .cal-day.free { border-color: var(--accent); background: var(--field); font-weight: 600; }
+  .cal-day.free small { font-size: 10px; font-weight: 400; color: var(--accent); }
+  .cal-day[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .cal-day[aria-pressed="true"] small { color: inherit; }
+  .svc-item:disabled { opacity: .45; cursor: default; }
   .demo a { color: var(--accent); }
   .done .big { font-family: var(--display); font-size: 34px; color: var(--accent); }
 </style>
@@ -61,8 +77,22 @@
       <div class="facts" id="facts"></div>
     </div>
 
+    <div class="modes" id="modes" role="group" aria-label="Как записаться">
+      <button type="button" data-k="svc">По услугам</button>
+      <button type="button" data-k="date">По дате</button>
+    </div>
+
+    <div id="steps" style="display:contents">
+    <section class="step" id="sCal" hidden>
+      <h2><i>1</i>Дата</h2>
+      <div class="pick" id="calHint">Даты, когда у мастера есть свободное время.</div>
+      <div class="cal-head"><button type="button" class="icon" id="calPrev" aria-label="Предыдущий месяц">‹</button><b id="calTitle"></b><button type="button" class="icon" id="calNext" aria-label="Следующий месяц">›</button></div>
+      <div class="cal" id="cal"></div>
+    </section>
+
     <section class="step" id="s1">
       <h2><i>1</i>Услуга</h2>
+      <div class="pick" id="svcHint"></div>
       <div class="svc-list" id="svcs"></div>
     </section>
 
@@ -89,6 +119,8 @@
       <div class="status" id="status" role="status"></div>
     </section>
 
+    </div>
+
     <section class="step done" id="done" hidden>
       <div class="big">Вы записаны!</div>
       <div class="summary" id="doneText" style="text-align:left"></div>
@@ -98,8 +130,8 @@
   </div>
 </div>
 
-<script src="../kit/backgrounds.js?v=202610251211"></script>
-<script src="../kit/kit.js?v=202610251211"></script>
+<script src="../kit/backgrounds.js?v=202610251217"></script>
+<script src="../kit/kit.js?v=202610251217"></script>
 <script>
 // Демо: окошки берутся из раздела «Свободные окошки», услуги и цены — из «Прайс-листа» этого браузера.
 // Запись никуда не отправляется и не сохраняется.
@@ -165,7 +197,43 @@ const WIN = windowsByDay();
 const startsFor = (iso, dur) => (WIN[iso] || []).flatMap(([s, e]) => { const out = []; for (let t = s; t + dur <= e; t += STEP) out.push(t); return out; });
 
 // ---------- шаги ----------
-const sel = { svc: null, day: null, time: null };
+const sel = { svc: null, day: null, time: null, mode: Kit.store.get("booking.mode") === "date" ? "date" : "svc" };
+const ORDER = { svc: ["s1", "s2", "s3", "s4"], date: ["sCal", "s1", "s3", "s4"] };   // «по услугам» и «по дате»
+const MON_NOM = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
+let calMonth = (Object.keys(WIN).sort()[0] || today).slice(0, 7);
+function applyMode() {
+  Kit.press($("modes"), sel.mode);
+  const order = ORDER[sel.mode];
+  ["sCal", "s2"].forEach(id => $(id).hidden = !order.includes(id));
+  order.forEach((id, i) => { $("steps").append($(id)); $(id).querySelector("h2 i").textContent = i + 1; });
+  reset();
+}
+function reset() {
+  sel.svc = sel.day = sel.time = null;
+  buildServices(); $("days").innerHTML = ""; $("times").innerHTML = "";
+  if (sel.mode === "date") {
+    buildCalendar(); step("sCal", true); step("s1", false); step("s3", false); step("s4", false);
+    $("dayHint").textContent = ""; $("timeHint").textContent = "Выберите дату и услугу.";
+    $("svcHint").textContent = "Сначала выберите дату — покажем услуги, которые в неё помещаются.";
+  } else {
+    step("s1", true); step("s2", false); step("s3", false); step("s4", false);
+    $("dayHint").textContent = "Сначала выберите услугу."; $("timeHint").textContent = "Выберите день."; $("svcHint").textContent = "";
+  }
+}
+function buildCalendar() {                                      // месяц: даты со свободным временем — выделены
+  const [y, m] = calMonth.split("-").map(Number), first = (new Date(y, m - 1, 1).getDay() + 6) % 7, n = new Date(y, m, 0).getDate();
+  const months = Object.keys(WIN).sort().map(d => d.slice(0, 7));
+  $("calTitle").textContent = MON_NOM[m - 1] + (y !== new Date().getFullYear() ? " " + y : "");
+  $("calPrev").disabled = calMonth <= today.slice(0, 7);
+  $("calNext").disabled = !months.length || calMonth >= months[months.length - 1];
+  let html = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map(d => `<span class="wd">${d}</span>`).join("") + "<span></span>".repeat(first);
+  for (let d = 1; d <= n; d++) {
+    const iso = `${calMonth}-${pad(d)}`, free = !!WIN[iso] && iso >= today;
+    const hours = free ? WIN[iso].reduce((a, [s2, e]) => a + e - s2, 0) / 60 : 0;
+    html += `<button type="button" class="cal-day${free ? " free" : ""}" data-iso="${iso}" ${free ? "" : "disabled"} aria-pressed="${sel.day === iso}" aria-label="${d} ${MON[m - 1]}${free ? ", свободно " + hours + " ч" : ""}">${d}${free ? `<small>${hours} ч</small>` : ""}</button>`;
+  }
+  $("cal").innerHTML = html;
+}
 function step(id, on) { $(id).classList.toggle("off", !on); }
 function buildHeader() {
   $("who").textContent = prof.master.trim() || "Имя мастера";
@@ -177,8 +245,12 @@ function buildHeader() {
     + `. Длительность услуг пока примерная. Запись никуда не отправляется и не сохраняется.`;
 }
 function buildServices() {
-  $("svcs").innerHTML = SVCS.map((s, i) => `<button type="button" class="svc-item" data-i="${i}" aria-pressed="${sel.svc === i}">
-      <b>${esc(s.name)}</b><span class="price">${esc(money(s.price))}</span><span class="dur">≈ ${durText(s.dur)}</span></button>`).join("");
+  const byDate = sel.mode === "date" && sel.day;
+  $("svcs").innerHTML = SVCS.map((s, i) => {
+    const fits = !byDate || startsFor(sel.day, s.dur).length > 0;
+    return `<button type="button" class="svc-item" data-i="${i}" ${fits ? "" : "disabled"} aria-pressed="${sel.svc === i}">
+      <b>${esc(s.name)}</b><span class="price">${esc(money(s.price))}</span><span class="dur">≈ ${durText(s.dur)}${fits ? "" : " · в этот день не помещается"}</span></button>`;
+  }).join("");
 }
 function buildDays() {
   const s = SVCS[sel.svc], days = Object.keys(WIN).sort();
@@ -200,8 +272,10 @@ function summaryText() {
   return `<b>${esc(s.name)}</b>${s.price ? " · " + esc(money(s.price)) : ""}<br>${DOW_LONG[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]}, ${hm(sel.time)}–${hm(sel.time + s.dur)}`;
 }
 $("svcs").addEventListener("click", e => {
-  const b = e.target.closest(".svc-item"); if (!b) return;
-  sel.svc = +b.dataset.i; sel.day = null; sel.time = null;
+  const b = e.target.closest(".svc-item"); if (!b || b.disabled) return;
+  sel.svc = +b.dataset.i; sel.time = null;
+  if (sel.mode === "date") { buildServices(); buildTimes(); step("s3", true); step("s4", false); $("s3").scrollIntoView({ behavior: "smooth", block: "nearest" }); return; }
+  sel.day = null;
   buildServices(); buildDays(); $("times").innerHTML = ""; $("timeHint").textContent = "Выберите день.";
   step("s2", true); step("s3", false); step("s4", false);
   $("s2").scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -218,6 +292,19 @@ $("times").addEventListener("click", e => {
   $("summary").innerHTML = summaryText(); step("s4", true);
   $("s4").scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
+$("cal").addEventListener("click", e => {
+  const b = e.target.closest(".cal-day"); if (!b || b.disabled) return;
+  sel.day = b.dataset.iso; sel.svc = null; sel.time = null;
+  const d = fromIso(sel.day);
+  buildCalendar(); buildServices(); $("times").innerHTML = ""; $("timeHint").textContent = "Выберите услугу.";
+  $("svcHint").textContent = `${DOW_LONG[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]} — услуги, которые помещаются в свободное время:`;
+  step("s1", true); step("s3", false); step("s4", false);
+  $("s1").scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+const shiftMonth = k => { const [y, m] = calMonth.split("-").map(Number), d = new Date(y, m - 1 + k, 1); calMonth = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; buildCalendar(); };
+$("calPrev").addEventListener("click", () => shiftMonth(-1));
+$("calNext").addEventListener("click", () => shiftMonth(1));
+$("modes").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; sel.mode = b.dataset.k; Kit.store.set("booking.mode", sel.mode); applyMode(); });
 $("cPhone").addEventListener("input", e => { e.target.value = maskPhone(e.target.value, (e.inputType || "").startsWith("delete")); });
 function setStatus(text, kind) { $("status").textContent = text; $("status").className = "status" + (kind ? " " + kind : ""); }
 $("send").addEventListener("click", () => {
@@ -227,17 +314,16 @@ $("send").addEventListener("click", () => {
   setStatus("");
   $("doneText").innerHTML = `${summaryText()}<br>Мастер: ${esc(prof.master.trim())}, ${esc(fmtPhone(prof.phone))}<br>Вы: ${esc($("cName").value.trim())}, ${esc(fmtPhone($("cPhone").value))}`;
   $("doneHint").textContent = "Демо: в рабочей версии мастер сразу получит заявку (например, в Telegram), а это время исчезнет из свободных. Сейчас запись нигде не сохраняется.";
-  ["s1", "s2", "s3", "s4"].forEach(id => $(id).hidden = true); $("done").hidden = false;
+  ["sCal", "s1", "s2", "s3", "s4", "modes"].forEach(id => $(id).hidden = true); $("done").hidden = false;
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 $("again").addEventListener("click", () => {
-  sel.svc = sel.day = sel.time = null; $("cName").value = ""; $("cPhone").value = ""; $("cNote").value = ""; $("cAgree").checked = false;
-  ["s1", "s2", "s3", "s4"].forEach(id => $(id).hidden = false); $("done").hidden = true;
-  buildServices(); $("days").innerHTML = ""; $("times").innerHTML = ""; $("dayHint").textContent = "Сначала выберите услугу."; $("timeHint").textContent = "Выберите день.";
-  step("s2", false); step("s3", false); step("s4", false);
+  $("cName").value = ""; $("cPhone").value = ""; $("cNote").value = ""; $("cAgree").checked = false;
+  ["s1", "s3", "s4", "modes"].forEach(id => $(id).hidden = false); $("done").hidden = true;
+  applyMode();
 });
 
-buildHeader(); buildServices();
+buildHeader(); applyMode();
 </script>
 </body>
 </html>
