@@ -131,6 +131,7 @@ input[type="color"] { width: 42px; height: 40px; border: 1px solid var(--line); 
 .status.err { color: var(--bad); }
 .status.ok { color: var(--ok); }
 .preview { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; gap: 10px; align-items: center; min-width: 0; }
+.preview .twin, .preview .status { width: 100%; max-width: 460px; }
 .preview canvas { width: 100%; max-width: 460px; height: auto; border-radius: 8px; box-shadow: 0 18px 50px rgba(40, 25, 15, .25); background: #ddd; }
 
 /* сетка свободного времени */

@@ -483,6 +483,8 @@
         <label class="check logo"><input type="checkbox" data-logo="ig" aria-label="Instagram — только логотип"><span>только логотип</span></label></div>
       <div class="socin"><label class="check"><input type="checkbox" id="k-max-on"> MAX</label><input type="text" id="k-soc-max" data-k="max" placeholder="ссылка на профиль или номер">
         <label class="check logo"><input type="checkbox" data-logo="max" aria-label="MAX — только логотип"><span>только логотип</span></label></div>
+      <div class="field"><span class="lbl">Соцсети на картинках</span>
+        <div class="seg" id="k-layout"><button type="button" data-k="row">В строку</button><button type="button" data-k="col">Столбиком</button></div></div>
       <span class="lbl">Свободные окошки</span>
       <label class="check"><input type="checkbox" id="k-hideBusy"> Не показывать дни без окошек</label>
     </section>`;
@@ -498,6 +500,8 @@
     $i("master").addEventListener("input", e => { prof.master = e.target.value; changed(); });
     $i("phone").addEventListener("input", e => { e.target.value = maskPhone(e.target.value, deleting(e)); prof.phone = e.target.value; changed(); });
     $i("email").addEventListener("input", e => { prof.email = e.target.value; changed(); });
+    press($i("layout"), prof.socLayout);                        // по умолчанию для всех разделов; в разделе можно поменять
+    $i("layout").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; prof.socLayout = b.dataset.k; press($i("layout"), prof.socLayout); changed(); });
     $i("hideBusy").checked = prof.hideBusy;
     $i("hideBusy").addEventListener("change", e => { prof.hideBusy = e.target.checked; changed(); });
     root.addEventListener("input", e => {                       // вписали значение — соцсеть включается сама; галкой можно скрыть, не стирая
@@ -547,26 +551,34 @@
     return { focus() { root.scrollIntoView({ block: "center" }); }, refresh: build };
   }
 
-  // кнопки «Скачать» и «Отправить»
+  // кнопки «Скачать» и «Отправить»; их копия — под эскизом картинки (видна, когда видны основные)
   function output({ download, share, status }, canvas, draw, fileName, ready) {
-    const setStatus = (text, kind) => { status.textContent = text; status.className = "status" + (kind ? " " + kind : ""); };
+    const pv = canvas.closest(".preview"), twin = document.createElement("div"), status2 = document.createElement("div");
+    twin.className = "btnrow twin"; status2.className = "status";
+    twin.innerHTML = `<button class="btn" type="button">${esc(download.textContent)}</button><button class="btn ghost" type="button">${esc(share.textContent)}</button>`;
+    if (pv) { canvas.after(twin, status2); const row = download.parentElement, sync = () => { twin.hidden = row.hidden; status2.hidden = row.hidden; };
+      new MutationObserver(sync).observe(row, { attributes: true, attributeFilter: ["hidden"] }); sync(); }
+    const [download2, share2] = twin.children;
+    const setStatus = (text, kind) => [status, status2].forEach(s => { s.textContent = text; s.className = "status" + (kind ? " " + kind : ""); });
     const blobNow = async () => {                               // ждём шрифты, иначе в картинку попадёт запасной
       await document.fonts.ready; draw();
       return new Promise(r => canvas.toBlob(r, "image/png"));
     };
-    download.addEventListener("click", async () => {
+    const save = async () => {
       const err = ready(); if (err) return setStatus(err, "err");
       const b = await blobNow(), a = document.createElement("a");
       a.href = URL.createObjectURL(b); a.download = fileName(); document.body.append(a); a.click();
       setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
       setStatus("Картинка сохранена.", "ok");
-    });
-    share.hidden = !(navigator.canShare && navigator.canShare({ files: [new File([new Blob(["x"])], "x.png", { type: "image/png" })] }));
-    share.addEventListener("click", async () => {
+    };
+    const send = async () => {
       const err = ready(); if (err) return setStatus(err, "err");
       try { await navigator.share({ files: [new File([await blobNow()], fileName(), { type: "image/png" })] }); setStatus(""); }
       catch (e) { if (e && e.name !== "AbortError") setStatus("Отправить не получилось — скачайте картинку.", "err"); }
-    });
+    };
+    const canShare = !!(navigator.canShare && navigator.canShare({ files: [new File([new Blob(["x"])], "x.png", { type: "image/png" })] }));
+    [download, download2].forEach(b => b.addEventListener("click", save));
+    [share, share2].forEach(b => { b.hidden = !canShare; b.addEventListener("click", send); });
     return { setStatus };
   }
   // общая проверка профиля перед сохранением картинки; возвращает текст ошибки или ""
