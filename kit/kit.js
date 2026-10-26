@@ -107,6 +107,7 @@
     ["master", "phone", "email", "socLayout", "qr", "qrUrl"].forEach(k => { if (typeof saved[k] === "string") p[k] = saved[k]; });
     p.showEmail = !!saved.showEmail;
     p.hideBusy = !!saved.hideBusy;                              // «Свободные окошки»: не показывать дни без окошек
+    p.qrBare = !!saved.qrBare;                                  // QR без светлой плашки
     if (saved.soc) SOCIALS.forEach(({ k }) => { if (saved.soc[k]) p.soc[k] = { on: !!saved.soc[k].on, val: saved.soc[k].val || "", logo: !!saved.soc[k].logo }; });
     p.phone = maskPhone(p.phone);
     return p;
@@ -183,14 +184,16 @@
       ctx.beginPath(); ctx.moveTo(cx - 130, y); ctx.lineTo(cx - 16, y); ctx.moveTo(cx + 16, y); ctx.lineTo(cx + 130, y); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(cx, y - 7); ctx.lineTo(cx + 7, y); ctx.lineTo(cx, y + 7); ctx.lineTo(cx - 7, y); ctx.closePath(); ctx.fill();
     }
-    function drawQr(url, x, y, size, t) {
-      const g = ctx.createLinearGradient(x, y, x + size, y + size);
-      g.addColorStop(0, t.qrTile[0]); g.addColorStop(1, t.qrTile[1]);
-      ctx.fillStyle = g; rr(ctx, x, y, size, size, 16); ctx.fill();
+    function drawQr(url, x, y, size, t, bare) {                 // bare — без плашки: узор цветом текста прямо на фоне
+      if (!bare) {
+        const g = ctx.createLinearGradient(x, y, x + size, y + size);
+        g.addColorStop(0, t.qrTile[0]); g.addColorStop(1, t.qrTile[1]);
+        ctx.fillStyle = g; rr(ctx, x, y, size, size, 16); ctx.fill();
+      }
       if (typeof qrcode !== "function") return;
       const q = qrcode(0, "M"); q.addData(url); q.make();
-      const n = q.getModuleCount(), pad = size * .07, m = (size - pad * 2) / n;
-      ctx.fillStyle = t.qrInk;
+      const n = q.getModuleCount(), pad = bare ? 0 : size * .07, m = (size - pad * 2) / n;
+      ctx.fillStyle = bare ? t.ink : t.qrInk;
       for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) ctx.fillRect(x + pad + c * m, y + pad + r * m, m + .03, m + .03);
     }
     function watermark(t, H) {
@@ -261,7 +264,7 @@
       });
       if (qr.url) {
         const qx = W - P - qs, qy = top + (h - qs - capH) / 2;
-        dr.drawQr(qr.url, qx, qy, qs, t);
+        dr.drawQr(qr.url, qx, qy, qs, t, prof.qrBare);
         dr.centered(qr.cap, qx + qs / 2, qy + qs + 36, '500 24px "Montserrat"', t.muted, qs + 40);
       }
     } };
@@ -485,6 +488,7 @@
         <label class="check logo"><input type="checkbox" data-logo="max" aria-label="MAX — только логотип"><span>только логотип</span></label></div>
       <div class="field"><span class="lbl">Соцсети на картинках</span>
         <div class="seg" id="k-layout"><button type="button" data-k="row">В строку</button><button type="button" data-k="col">Столбиком</button></div></div>
+      <label class="check"><input type="checkbox" id="k-qrBare"> QR-код без светлой плашки — только узор на фоне</label>
       <span class="lbl">Свободные окошки</span>
       <label class="check"><input type="checkbox" id="k-hideBusy"> Не показывать дни без окошек</label>
     </section>`;
@@ -502,6 +506,8 @@
     $i("email").addEventListener("input", e => { prof.email = e.target.value; changed(); });
     press($i("layout"), prof.socLayout);                        // по умолчанию для всех разделов; в разделе можно поменять
     $i("layout").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; prof.socLayout = b.dataset.k; press($i("layout"), prof.socLayout); changed(); });
+    $i("qrBare").checked = prof.qrBare;
+    $i("qrBare").addEventListener("change", e => { prof.qrBare = e.target.checked; changed(); });
     $i("hideBusy").checked = prof.hideBusy;
     $i("hideBusy").addEventListener("change", e => { prof.hideBusy = e.target.checked; changed(); });
     root.addEventListener("input", e => {                       // вписали значение — соцсеть включается сама; галкой можно скрыть, не стирая
