@@ -57,7 +57,7 @@ h2 { margin: 0; font-size: 12px; letter-spacing: .2em; text-transform: uppercase
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 label, .lbl { font-size: 12px; color: var(--muted); }
 .req::after { content: " *"; color: var(--bad); }
-input[type="text"], input[type="tel"], input[type="url"], input[type="email"], input[type="date"], input[type="time"], select {
+input[type="text"], input[type="tel"], input[type="url"], input[type="email"], input[type="date"], input[type="time"], input[type="search"], select {
   width: 100%; font: inherit; font-size: 16px; color: var(--text); background: var(--field);
   border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; min-width: 0;
 }
@@ -90,7 +90,17 @@ input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px s
 .icon:disabled { opacity: .35; cursor: default; }
 .icon.del { color: var(--bad); font-size: 20px; }
 .empty { font-size: 13.5px; color: var(--muted); padding: 6px 0; }
-.addrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+/* подбор услуг: поиск, профессии, плитки */
+.picker { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: var(--field); }
+.pkprofs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.pktiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; max-height: 340px; overflow-y: auto; }
+.tile { text-align: left; border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 13px; cursor: pointer; display: flex; flex-direction: column; gap: 3px; }
+.tile b { font-weight: 500; line-height: 1.25; }
+.tile span { font-size: 12px; color: var(--accent); }
+.tile[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.tile[aria-pressed="true"] span { color: var(--ok); }
+.pktiles .empty { grid-column: 1 / -1; }
+.pkfoot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .btn { font: inherit; font-size: 14px; cursor: pointer; border-radius: 10px; padding: 12px 16px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 500; }
 .btn.ghost { background: transparent; color: var(--accent); }
 .btnrow { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -163,7 +173,7 @@ details.month > .days { padding-bottom: 14px; }
   section.group + section.group, .tab > div + section.group, .tab > section.group + div { padding-top: 14px; }
   .row { gap: 8px; }
   .field { gap: 4px; }
-  input[type="text"], input[type="tel"], input[type="url"], input[type="email"], input[type="date"], input[type="time"], select { font-size: 14px; padding: 7px 10px; border-radius: 8px; }
+  input[type="text"], input[type="tel"], input[type="url"], input[type="email"], input[type="date"], input[type="time"], input[type="search"], select { font-size: 14px; padding: 7px 10px; border-radius: 8px; }
   .seg button, .chip { font-size: 12.5px; padding: 7px 10px; }
   .btn { font-size: 13.5px; padding: 10px 12px; }
   .check { font-size: 13px; }

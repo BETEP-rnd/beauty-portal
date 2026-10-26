@@ -435,6 +435,11 @@
     SHOW.forEach(({ k }) => sel[k] = k === "email" ? !!prof.showEmail && avail(prof, k) : avail(prof, k));
     return sel;
   }
+  // выбор раздела: кабинет задаёт «по умолчанию»; правки в разделе живут, пока в кабинете ничего не поменяли
+  function sectionShow(prof, sel) {
+    const def = defaultShow(prof), from = JSON.stringify(def);
+    return sel && sel.from === from ? sel : { ...def, from };
+  }
   // профиль, каким его видит картинка раздела: только выбранные и заполненные контакты
   function forSection(prof, sel) {
     const soc = {};
@@ -573,6 +578,6 @@
     W, SCALE, FORMATS, FONTS, SCRIPTS, SOCIALS, store, loadJSON, esc,
     digits, normPhone, fmtPhone, maskPhone, group, socText, qrTarget, contactsHtml, loadProfile, saveProfile,
     baseStyle, styleOf, fontOf, caseOf, painter, header, footer, press,
-    tabs, designPanel, takenThemes, claimTheme, SECTIONS, fontsPanel, contactsPanel, showPanel, defaultShow, forSection, output, profileError, safeName, PRESET,
+    tabs, designPanel, takenThemes, claimTheme, SECTIONS, fontsPanel, contactsPanel, showPanel, defaultShow, sectionShow, forSection, output, profileError, safeName, PRESET,
   });
 })();
