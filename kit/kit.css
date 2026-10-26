@@ -1,6 +1,6 @@
 /* Общие стили разделов: форма с вкладками слева, живое превью картинки справа; на телефоне превью сверху. */
 :root {
-  --bg: #f7f3ee; --panel: #ffffff; --line: #e6dcd0; --field: #fffdfa;
+  --bg: #f7f3ee; --panel: #ffffff; --line: #cdbcaa; --field: #fffdfa;
   --text: #2b2420; --muted: #8a7b6e; --accent: #9b6b4f; --accent-ink: #ffffff; --bad: #b8483a; --ok: #4f7f45; --warn: #b7791f;
   --free: #9b6b4f; --busy: #efe7dd;
   --ui: "Montserrat", "Segoe UI", system-ui, sans-serif;
@@ -10,19 +10,19 @@
 /* оформление: светлая (по умолчанию днём), тёмная, комбинированная — тёмный фон и шапка, светлые панели */
 @media (prefers-color-scheme: dark) {
   :root:not([data-ui]) {
-    --bg: #16120f; --panel: #1f1a16; --line: #3a3029; --field: #1a1613;
+    --bg: #16120f; --panel: #1f1a16; --line: #5a4b40; --field: #1a1613;
     --text: #eee5da; --muted: #a8988a; --accent: #d2a37f; --accent-ink: #1a120c; --bad: #e08a6a; --ok: #8fbf7a; --warn: #e2b45a;
     --free: #d2a37f; --busy: #2c251f;
     color-scheme: dark;
   }
 }
 :root[data-ui="dark"] {
-  --bg: #16120f; --panel: #1f1a16; --line: #3a3029; --field: #1a1613;
+  --bg: #16120f; --panel: #1f1a16; --line: #5a4b40; --field: #1a1613;
   --text: #eee5da; --muted: #a8988a; --accent: #d2a37f; --accent-ink: #1a120c; --bad: #e08a6a; --ok: #8fbf7a; --warn: #e2b45a;
   --free: #d2a37f; --busy: #2c251f;
   color-scheme: dark;
 }
-:root[data-ui="mix"] { --page-bg: #15110e; --page-text: #f1e8dc; --page-muted: #bfae95; --page-line: #3d332b; }
+:root[data-ui="mix"] { --page-bg: #15110e; --page-text: #f1e8dc; --page-muted: #bfae95; --page-line: #5c4c40; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { margin: 0; }
@@ -73,8 +73,12 @@ input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px s
 .chip span { color: var(--muted); font-size: 12px; }
 .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .chip[aria-pressed="true"] span { color: inherit; opacity: .8; }
-.thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; }
-.thumb { border: 0; padding: 0; background: none; cursor: pointer; border-radius: 8px; line-height: 0; }
+.thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.thumb { border: 0; padding: 0; background: none; cursor: pointer; border-radius: 8px; line-height: 0; width: 100%; }
+.tw { position: relative; }
+.fav { position: absolute; bottom: 4px; left: 4px; width: 28px; height: 28px; border-radius: 50%; border: 0; padding: 0; background: rgba(255,255,255,.85); color: #b0405e; font-size: 16px; line-height: 28px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.fav[aria-pressed="true"] { background: #b0405e; color: #fff; }
+.thumbs > .hint { grid-column: 1 / -1; }
 .thumb canvas { width: 100%; height: auto; border-radius: 8px; box-shadow: 0 0 0 1px var(--line); }
 .thumb[aria-pressed="true"] canvas { box-shadow: 0 0 0 3px var(--accent); }
 
@@ -94,7 +98,8 @@ input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px s
 .linkbtn { background: none; border: 0; color: var(--accent); padding: 2px; font: inherit; font-size: 12.5px; text-decoration: underline; cursor: pointer; }
 
 .socchips { display: flex; gap: 8px; flex-wrap: wrap; }
-.socin { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px; align-items: center; }
+.socin { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.check.logo { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
 .check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--text); cursor: pointer; }
 .check input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
 
@@ -151,7 +156,7 @@ details.month > .days { padding-bottom: 14px; }
 @media (max-width: 420px) {
   .row { grid-template-columns: 1fr; } .socin { grid-template-columns: 1fr; }
   nav.tabs button { flex: 1; padding: 14px 4px 10px; font-size: 12px; letter-spacing: .04em; }
-  .thumbs { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .thumbs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   .slot { height: 38px; }
 }
 /* фон, уже выбранный в другом разделе */

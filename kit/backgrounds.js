@@ -752,6 +752,15 @@
   };
   const THEMES = Object.fromEntries([...cats, ...Object.values(OWN)].flatMap(c => c.items.map(t => [t.id, t])));
 
+  // коллекции — вкладки над категориями; дополнительные (trends.js) подключаются через addCollection
+  const COLLECTIONS = [{ id: "classic", name: "Классика", cats }];
+  function addCollection(id, name, decors, names, list) {
+    Object.assign(DECOR, decors); Object.assign(DECOR_NAMES, names);
+    const cs = list.map(args => build(...args));
+    cs.forEach(c => c.items.forEach(t => THEMES[t.id] = t));
+    COLLECTIONS.push({ id, name, cats: cs });
+  }
+
   function drawBg(c, t, W, H) {
     let g;
     if (t.radial) { g = c.createRadialGradient(W / 2, H * .35, 0, W / 2, H * .35, H * .8); g.addColorStop(0, t.a); g.addColorStop(1, t.b); }
@@ -761,5 +770,5 @@
     if (t.panel) { c.fillStyle = t.panel; rr(c, 56, 56, W - 112, H - 112, 30); c.fill(); }
   }
 
-  Object.assign(Kit, { CATS: cats, OWN, THEMES, DECOR, drawBg });
+  Object.assign(Kit, { CATS: cats, OWN, THEMES, DECOR, drawBg, COLLECTIONS, addCollection, blob, edgePts, heart, waveBand, archPath });
 })();

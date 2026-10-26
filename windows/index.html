@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f7f3ee">
 <title>Свободные окошки</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Raleway:ital,wght@0,400;0,600;0,700;1,400&family=Manrope:wght@400;600;700&family=Nunito:ital,wght@0,400;0,700;1,400&family=Comfortaa:wght@400;700&family=Oswald:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Lora:ital,wght@0,400;0,700;1,400&family=Prata&family=Forum&family=Poiret+One&family=Marck+Script&family=Bad+Script&family=Caveat:wght@400;700&family=Lobster&family=Amatic+SC:wght@400;700&display=swap">
-<link rel="stylesheet" href="../kit/kit.css?v=202610251217">
+<link rel="stylesheet" href="../kit/kit.css?v=202610262050">
 <script>try { var u = localStorage.getItem("beauty.ui"); if (u) document.documentElement.dataset.ui = u; } catch (e) {}</script>
 </head>
 <body>
@@ -95,8 +95,9 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="../kit/backgrounds.js?v=202610251217"></script>
-<script src="../kit/kit.js?v=202610251217"></script>
+<script src="../kit/backgrounds.js?v=202610262050"></script>
+<script src="../kit/trends.js?v=202610262050"></script>
+<script src="../kit/kit.js?v=202610262050"></script>
 <script>
 const TEXTS = [
   { k: "title", name: "Заголовок" }, { k: "subtitle", name: "Подзаголовок" }, { k: "master", name: "Имя мастера" },
@@ -167,7 +168,8 @@ function autoSubtitle() {
 }
 
 // ---------- рисование ----------
-const canvas = $("cv"), ctx = canvas.getContext("2d"), dr = Kit.painter(ctx);
+const canvas = $("cv");
+let ctx = canvas.getContext("2d"), dr = Kit.painter(ctx);            // let — превью фонов временно рисуют на своём холсте
 let H = 1920, dense = false;                                    // dense — окошек столько, что текст получился мелким
 function fit(maxS, minS, height, avail) { let s = maxS; while (s > minS && height(s) > avail) s -= 1; return s; }
 
@@ -363,6 +365,16 @@ function draw() {
   const t = th(), F = FORMATS[S.format] || FORMATS.story, P = 96;
   if (H !== F.h || canvas.width !== W * SCALE) { H = F.h; canvas.width = W * SCALE; canvas.height = H * SCALE; }
   ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0); ctx.globalAlpha = 1; ctx.textBaseline = "alphabetic";
+  render(t, F, P);
+  hints();
+  $("size").textContent = `Картинка ${W * SCALE} × ${H * SCALE} — для сторис, мессенджеров и печати`;
+}
+// миниатюра в «Дизайне»: та же картинка с другим фоном
+function preview(c, t) {
+  const keep = [ctx, dr, S.theme, S.watermark, dense]; ctx = c; dr = Kit.painter(c); S.theme = t.id; S.watermark = false;   // водяной знак в миниатюре только мешает
+  try { render(t, FORMATS[S.format] || FORMATS.story, 96); } finally { [ctx, dr, S.theme, S.watermark, dense] = keep; }
+}
+function render(t, F, P) {                                  // сама картинка — и для холста, и для миниатюр
   Kit.drawBg(ctx, t, W, H);
   const y = Kit.header(dr, t, F, { title: S.title, titleDefault: "Свободные окошки", subtitle: S.subtitle.trim() || autoSubtitle(), master: prof.master }, style);
   const foot = Kit.footer(dr, t, F, Kit.forSection(prof, S.contacts), style), footTop = H - F.bottom - foot.h;
@@ -374,8 +386,6 @@ function draw() {
   else ({ list: drawList, week: drawWeek, starts: drawStarts, calendar: drawCalendar }[lay] || drawList)(top, bottom, days, t, P);
   foot.draw(footTop);
   if (S.watermark) dr.watermark(t, H);
-  hints();
-  $("size").textContent = `Картинка ${W * SCALE} × ${H * SCALE} — для сторис, мессенджеров и печати`;
 }
 let raf = 0;
 function changed() { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); Kit.store.set(KEY, JSON.stringify(S)); hints(); }
@@ -466,7 +476,7 @@ $("days").addEventListener("click", e => {
 $("clearAll").addEventListener("click", () => { dates().forEach(d => delete S.free[d]); buildDays(); changed(); });
 
 // ---------- панели ----------
-const design = Kit.designPanel($("design"), S, kind => { if (kind === "theme") fonts.refresh(); changed(); }, { own: "windows", self: "windows" });
+const design = Kit.designPanel($("design"), S, kind => { if (kind === "theme") fonts.refresh(); changed(); }, { own: "windows", self: "windows", preview });
 const fonts = Kit.fontsPanel($("fonts"), TEXTS, S, style, changed);
 const contacts = Kit.showPanel($("contacts"), prof, S.contacts, changed);
 const tabs = Kit.tabs($("tabs"), "windows.tab", name => { if (name === "design") design.show(); });

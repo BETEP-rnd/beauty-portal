@@ -36,6 +36,7 @@
     if (store.get("beauty.ui")) apply(); else box.querySelectorAll("[data-k]").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === cur()));
   }
   const loadJSON = k => { try { return JSON.parse(store.get(k)); } catch (e) { return null; } };
+  const FAV_KEY = "beauty.favs";                                // избранные фоны (id тем)
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
   // ---------- телефон и ссылки ----------
@@ -96,16 +97,16 @@
   const PROFILE_KEY = "beauty.profile";
   // кабинет по умолчанию — Лариса (заказчица); пустой профиль заполняется её данными
   const PRESET = { master: "Лариса Чурилова", phone: "+7 (906) 091-85-93", email: "", showEmail: false,
-    soc: { wa: { on: false, val: "" }, tg: { on: true, val: "@Lara_lashes" }, ig: { on: false, val: "" }, max: { on: false, val: "" } },
+    soc: { wa: { on: false, val: "", logo: false }, tg: { on: true, val: "@Lara_lashes", logo: false }, ig: { on: false, val: "", logo: false }, max: { on: false, val: "", logo: false } },
     socLayout: "row", qr: "tg", qrUrl: "" };
   function loadProfile() {
-    const p = { master: "", phone: "", email: "", showEmail: false, soc: { wa: { on: false, val: "" }, tg: { on: false, val: "" }, ig: { on: false, val: "" }, max: { on: false, val: "" } },
+    const p = { master: "", phone: "", email: "", showEmail: false, soc: { wa: { on: false, val: "", logo: false }, tg: { on: false, val: "", logo: false }, ig: { on: false, val: "", logo: false }, max: { on: false, val: "", logo: false } },
       socLayout: "row", qr: "none", qrUrl: "" };
     let saved = loadJSON(PROFILE_KEY) || loadJSON("price.v1");     // прайс до появления профиля хранил контакты у себя
     if (!saved || (!(saved.master || "").trim() && !digits(saved.phone))) saved = PRESET;
     ["master", "phone", "email", "socLayout", "qr", "qrUrl"].forEach(k => { if (typeof saved[k] === "string") p[k] = saved[k]; });
     p.showEmail = !!saved.showEmail;
-    if (saved.soc) SOCIALS.forEach(({ k }) => { if (saved.soc[k]) p.soc[k] = { on: !!saved.soc[k].on, val: saved.soc[k].val || "" }; });
+    if (saved.soc) SOCIALS.forEach(({ k }) => { if (saved.soc[k]) p.soc[k] = { on: !!saved.soc[k].on, val: saved.soc[k].val || "", logo: !!saved.soc[k].logo }; });
     p.phone = maskPhone(p.phone);
     return p;
   }
@@ -222,12 +223,17 @@
     const phoneSize = (story ? 44 : 38) * st.size, socSize = (story ? 32 : 28) * st.size;
     const socWeight = st.overBold ? st.weight : 400;
     const phone = { icon: "phone", text: fmtPhone(prof.phone) || "+7 (999) 999-99-99", size: phoneSize, weight: st.weight, color: prof.phone ? st.color : t.muted };
-    const socs = SOCIALS.filter(s => prof.soc[s.k].on).map(s => ({ icon: s.k, text: socText(prof, s.k), size: socSize, weight: socWeight, color: st.color }));
+    const socs = SOCIALS.filter(s => prof.soc[s.k].on).map(s => ({ icon: s.k, text: prof.soc[s.k].logo ? "" : socText(prof, s.k), size: socSize, weight: socWeight, color: st.color }));
     if (prof.showEmail && (prof.email || "").trim()) socs.push({ icon: "mail", text: prof.email.trim(), size: socSize, weight: socWeight, color: st.color });
     const qr = qrTarget(prof), qs = F.qr, capH = 46, colW = qr.url ? W - 2 * P - qs - 44 : W - 2 * P;
-    const itemW = it => { ctx.font = fontOf(st, it.size, it.weight); return it.size * 1.3 + ctx.measureText(caseOf(st, it.text)).width; };
+    const LOGO = 1.25;                                          // значок без подписи («только логотип») — чуть крупнее
+    const itemW = it => { if (!it.text) return it.size * LOGO; ctx.font = fontOf(st, it.size, it.weight); return it.size * 1.3 + ctx.measureText(caseOf(st, it.text)).width; };
     const lines = [[phone]];                                    // строки подвала: телефон, потом соцсети
-    if (prof.socLayout === "col") socs.forEach(s => lines.push([s]));
+    if (prof.socLayout === "col") {                             // столбиком — соцсети с подписью, значки без подписи одной строкой в конце
+      socs.filter(s => s.text).forEach(s => lines.push([s]));
+      const logos = socs.filter(s => !s.text);
+      if (logos.length) lines.push(logos);
+    }
     else {
       let cur = [], w = 0;
       socs.forEach(s => { const sw = itemW(s); if (cur.length && w + 34 + sw > colW) { lines.push(cur); cur = []; w = 0; } w += (cur.length ? 34 : 0) + sw; cur.push(s); });
@@ -242,7 +248,9 @@
         const total = line.reduce((a, it) => a + itemW(it), 0) + 34 * (line.length - 1), k = total > colW ? colW / total : 1;
         let x = qr.url ? P : W / 2 - total * k / 2;
         line.forEach(it => {
-          const size = it.size * k, iw = size * .9, text = caseOf(st, it.text);
+          const size = it.size * k, text = caseOf(st, it.text);
+          if (!text) { const lw = size * LOGO; dr.icon(it.icon, x, base - size * .82 - (lw - size * .9) / 2, lw, iconCol(it.color)); x += lw + 34 * k; return; }
+          const iw = size * .9;
           ctx.font = fontOf(st, size, it.weight);
           dr.icon(it.icon, x, base - size * .82, iw, iconCol(it.color));
           ctx.fillStyle = dr.paint(it.color, x, x + 400); ctx.textAlign = "left"; ctx.fillText(text, x + size * 1.3, base);
@@ -291,38 +299,75 @@
   function designPanel(root, state, onChange, opts = {}) {
     const formats = opts.formats || FORMATS;                    // у сертификата один свой формат — выбор не показываем
     root.innerHTML = `<section class="group" ${Object.keys(formats).length < 2 ? "hidden" : ""}><h2>Формат</h2><div class="seg" data-role="formats"></div></section>
-      <section class="group"><h2>Фон</h2><div class="cats" data-role="cats"></div><div class="thumbs" data-role="thumbs"></div><span class="hint" data-role="name"></span></section>`;
+      <section class="group"><h2>Фон</h2><div class="seg" data-role="cols"></div><div class="cats" data-role="cats"></div><div class="thumbs" data-role="thumbs"></div><span class="hint" data-role="name"></span></section>`;
     const $r = r => root.querySelector(`[data-role="${r}"]`);
-    const CATS = opts.own ? [Kit.OWN[opts.own], ...Kit.CATS] : Kit.CATS;   // свои уникальные фоны раздела — первыми
-    let cat = (CATS.find(c => c.items.some(t => t.id === state.theme)) || CATS[0]).id, taken = {};
+    // коллекции фонов (классика, тренды…); свои уникальные фоны раздела — первыми в первой коллекции
+    const COLS = Kit.COLLECTIONS.map((x, i) => ({ ...x, cats: i === 0 && opts.own ? [Kit.OWN[opts.own], ...x.cats] : x.cats }));
+    const CATS = COLS.flatMap(x => x.cats);
+    let cat = (CATS.find(c => c.items.some(t => t.id === state.theme)) || CATS[0]).id, taken = {}, job = 0;
+    let col = COLS.find(x => x.cats.some(c => c.id === cat)).id;
+    // избранное — общее для всех разделов; пока в браузере, позже — в базе
+    let favs = (loadJSON(FAV_KEY) || []).filter(id => Kit.THEMES[id]);
+    const favCat = () => ({ id: "fav", name: "♥ Избранное", items: favs.map(id => Kit.THEMES[id]) });
     $r("formats").innerHTML = Object.entries(formats).map(([k, f]) => `<button type="button" data-k="${k}">${f.name}</button>`).join("");
     press($r("formats"), state.format);
-    $r("cats").innerHTML = CATS.map(c => `<button type="button" class="chip" data-k="${c.id}">${c.name} <span>${c.items.length}</span></button>`).join("");
-    press($r("cats"), cat);
+    $r("cols").hidden = COLS.length < 2;
+    $r("cols").innerHTML = COLS.map(x => `<button type="button" data-k="${x.id}">${x.name}</button>`).join("");
+    function chips() {
+      press($r("cols"), cat === "fav" ? "" : col);
+      $r("cats").innerHTML = [favCat(), ...COLS.find(x => x.id === col).cats].map(c => `<button type="button" class="chip" data-k="${c.id}">${c.name} <span>${c.items.length}</span></button>`).join("");
+      press($r("cats"), cat);
+    }
+    chips();
     const total = CATS.reduce((a, c) => a + c.items.length, 0);
     const name = () => $r("name").textContent = `Выбрано: ${(Kit.THEMES[state.theme] || {}).name || "—"} · всего фонов: ${total}`;
+    // миниатюра: раздел рисует свою настоящую картинку (opts.preview), иначе — фон с условными строками
+    function sketch(c2, t, TW, TH) {
+      Kit.drawBg(c2, t, TW, TH);
+      c2.fillStyle = paintOn(c2, t.accent, 300, 780); c2.fillRect(300, 190, 480, 70);
+      c2.fillStyle = A(t.ink, .75);
+      for (let i = 0; i < 7; i++) c2.fillRect(140, 560 + i * 120, 360 + (i * 97 % 160), 26);
+      c2.fillStyle = paintOn(c2, t.accent, 760, 940);
+      for (let i = 0; i < 7; i++) c2.fillRect(780, 560 + i * 120, 160, 26);
+      c2.fillStyle = A(t.ink, .6); c2.fillRect(140, TH - 300, 420, 34);
+    }
     function thumbs() {
-      const c = CATS.find(x => x.id === cat), TW = 1080, TH = 1920, px = 96 * 2;
+      const c = cat === "fav" ? favCat() : CATS.find(x => x.id === cat), TW = 1080, TH = (formats[state.format] || Object.values(formats)[0]).h, px = 240, my = ++job;
       taken = opts.self ? takenThemes(opts.self) : {};
       $r("thumbs").innerHTML = c.items.map(t => {
-        const busy = taken[t.id] && t.id !== state.theme, label = busy ? `${t.name} — уже в ${taken[t.id].name}` : t.name;
-        return `<button type="button" class="thumb${busy ? " taken" : ""}" data-id="${t.id}" ${busy ? `disabled data-taken="уже в ${esc(taken[t.id].name)}"` : ""} title="${esc(label)}" aria-label="${esc(label)}" aria-pressed="${t.id === state.theme}"><canvas width="${px}" height="${Math.round(px * TH / TW)}"></canvas></button>`;
-      }).join("");
-      $r("thumbs").querySelectorAll(".thumb").forEach(b => {
-        const t = Kit.THEMES[b.dataset.id], cv = b.querySelector("canvas"), c2 = cv.getContext("2d");
-        c2.setTransform(cv.width / TW, 0, 0, cv.width / TW, 0, 0); Kit.drawBg(c2, t, TW, TH);
-        c2.fillStyle = paintOn(c2, t.accent, 300, 780); c2.fillRect(300, 190, 480, 70);   // условный заголовок и строки
-        c2.fillStyle = A(t.ink, .75);
-        for (let i = 0; i < 7; i++) c2.fillRect(140, 560 + i * 120, 360 + (i * 97 % 160), 26);
-        c2.fillStyle = paintOn(c2, t.accent, 760, 940);
-        for (let i = 0; i < 7; i++) c2.fillRect(780, 560 + i * 120, 160, 26);
-        c2.fillStyle = A(t.ink, .6); c2.fillRect(140, 1620, 420, 34);
-      });
+        const busy = taken[t.id] && t.id !== state.theme, label = busy ? `${t.name} — уже в ${taken[t.id].name}` : t.name, fav = favs.includes(t.id);
+        return `<div class="tw"><button type="button" class="thumb${busy ? " taken" : ""}" data-id="${t.id}" ${busy ? `disabled data-taken="уже в ${esc(taken[t.id].name)}"` : ""} title="${esc(label)}" aria-label="${esc(label)}" aria-pressed="${t.id === state.theme}"><canvas width="${px}" height="${Math.round(px * TH / TW)}"></canvas></button>`
+          + `<button type="button" class="fav" data-fav="${t.id}" aria-pressed="${fav}" title="${fav ? "Убрать из избранного" : "В избранное"}" aria-label="${fav ? "Убрать из избранного" : "В избранное"}">${fav ? "♥" : "♡"}</button></div>`;
+      }).join("") || `<span class="hint">Пока пусто. Нажмите ♡ на понравившемся фоне — он появится здесь во всех разделах.</span>`;
+      const queue = [...$r("thumbs").querySelectorAll(".thumb")];
+      (function step() {                                        // рисуем по несколько за кадр, чтобы страница не замирала
+        if (my !== job) return;
+        const until = performance.now() + 24;
+        while (queue.length && performance.now() < until) {
+          const b = queue.shift(), t = Kit.THEMES[b.dataset.id], cv = b.querySelector("canvas"), c2 = cv.getContext("2d");
+          c2.setTransform(cv.width / TW, 0, 0, cv.width / TW, 0, 0); c2.globalAlpha = 1; c2.textBaseline = "alphabetic";
+          try { opts.preview ? opts.preview(c2, t) : sketch(c2, t, TW, TH); } catch (e) { sketch(c2, t, TW, TH); }
+        }
+        if (queue.length) requestAnimationFrame(step);
+      })();
       name();
     }
-    $r("formats").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; state.format = b.dataset.k; press($r("formats"), state.format); onChange("format"); });
-    $r("cats").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; cat = b.dataset.k; press($r("cats"), cat); thumbs(); });
+    $r("formats").addEventListener("click", e => {
+      const b = e.target.closest("[data-k]"); if (!b) return; state.format = b.dataset.k; press($r("formats"), state.format); onChange("format");
+      requestAnimationFrame(() => requestAnimationFrame(thumbs));   // после перерисовки раздела в новом формате
+    });
+    $r("cols").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; col = b.dataset.k; cat = COLS.find(x => x.id === col).cats[0].id; chips(); thumbs(); });
+    $r("cats").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; cat = b.dataset.k; press($r("cats"), cat); press($r("cols"), cat === "fav" ? "" : col); thumbs(); });
     $r("thumbs").addEventListener("click", e => {
+      const f = e.target.closest(".fav");
+      if (f) {
+        const id = f.dataset.fav, on = !favs.includes(id);
+        favs = on ? [...favs, id] : favs.filter(x => x !== id); store.set(FAV_KEY, JSON.stringify(favs));
+        if (cat === "fav") { chips(); thumbs(); return; }
+        f.setAttribute("aria-pressed", on); f.textContent = on ? "♥" : "♡"; f.title = on ? "Убрать из избранного" : "В избранное"; f.setAttribute("aria-label", f.title);
+        const n = $r("cats").querySelector('[data-k="fav"] span'); if (n) n.textContent = favs.length;
+        return;
+      }
       const b = e.target.closest(".thumb"); if (!b || b.disabled) return;
       state.theme = b.dataset.id; $r("thumbs").querySelectorAll(".thumb").forEach(x => x.setAttribute("aria-pressed", x === b));
       name(); onChange("theme");
@@ -393,7 +438,7 @@
   // профиль, каким его видит картинка раздела: только выбранные и заполненные контакты
   function forSection(prof, sel) {
     const soc = {};
-    SOCIALS.forEach(({ k }) => soc[k] = { on: !!sel[k] && avail(prof, k), val: prof.soc[k].val });
+    SOCIALS.forEach(({ k }) => soc[k] = { on: !!sel[k] && avail(prof, k), val: prof.soc[k].val, logo: !!prof.soc[k].logo });
     return { ...prof, soc, showEmail: !!sel.email && avail(prof, "email"), socLayout: sel.layout, qr: sel.qr, qrUrl: sel.qrUrl };
   }
 
@@ -406,16 +451,22 @@
       <div class="field"><label for="k-phone" class="req">Телефон</label><input id="k-phone" type="tel" inputmode="tel" placeholder="+7 (999) 999-99-99" maxlength="18"></div>
       <div class="field"><label for="k-email">Почта</label><input id="k-email" type="email" inputmode="email" autocomplete="email" placeholder="name@mail.ru"></div>
       <span class="lbl">Соцсети — заполните те, что есть</span>
+      <span class="hint">«Только логотип» — на картинке будет значок соцсети без ника и номера. Удобно, когда WhatsApp на тот же номер, что и телефон.</span>
       <div class="socin"><label class="check"><input type="checkbox" id="k-wa-on"> WhatsApp</label>
-        <input type="tel" id="k-soc-wa" data-k="wa" inputmode="tel" maxlength="18" placeholder="номер, если не тот же"></div>
-      <div class="socin"><label for="k-soc-tg">Telegram</label><input type="text" id="k-soc-tg" data-k="tg" placeholder="@ник или t.me/…"></div>
-      <div class="socin"><label for="k-soc-ig">Instagram</label><input type="text" id="k-soc-ig" data-k="ig" placeholder="@ник"></div>
-      <div class="socin"><label for="k-soc-max">MAX</label><input type="text" id="k-soc-max" data-k="max" placeholder="ссылка на профиль или номер"></div>
+        <input type="tel" id="k-soc-wa" data-k="wa" inputmode="tel" maxlength="18" placeholder="номер, если не тот же">
+        <label class="check logo"><input type="checkbox" data-logo="wa"> только логотип</label></div>
+      <div class="socin"><label for="k-soc-tg">Telegram</label><input type="text" id="k-soc-tg" data-k="tg" placeholder="@ник или t.me/…">
+        <label class="check logo"><input type="checkbox" data-logo="tg"> только логотип</label></div>
+      <div class="socin"><label for="k-soc-ig">Instagram</label><input type="text" id="k-soc-ig" data-k="ig" placeholder="@ник">
+        <label class="check logo"><input type="checkbox" data-logo="ig"> только логотип</label></div>
+      <div class="socin"><label for="k-soc-max">MAX</label><input type="text" id="k-soc-max" data-k="max" placeholder="ссылка на профиль или номер">
+        <label class="check logo"><input type="checkbox" data-logo="max"> только логотип</label></div>
     </section>`;
     const $i = id => root.querySelector("#k-" + id), deleting = e => (e.inputType || "").startsWith("delete");
     const changed = () => { saveProfile(prof); onChange("profile"); };
     $i("master").value = prof.master; $i("phone").value = prof.phone; $i("email").value = prof.email; $i("wa-on").checked = prof.soc.wa.on;
-    SOCIALS.forEach(({ k }) => $i("soc-" + k).value = prof.soc[k].val);
+    SOCIALS.forEach(({ k }) => { $i("soc-" + k).value = prof.soc[k].val; root.querySelector(`[data-logo="${k}"]`).checked = !!prof.soc[k].logo; });
+    root.addEventListener("change", e => { const k = e.target.dataset.logo; if (!k) return; prof.soc[k].logo = e.target.checked; changed(); });
     $i("master").addEventListener("input", e => { prof.master = e.target.value; changed(); });
     $i("phone").addEventListener("input", e => { e.target.value = maskPhone(e.target.value, deleting(e)); prof.phone = e.target.value; changed(); });
     $i("email").addEventListener("input", e => { prof.email = e.target.value; changed(); });

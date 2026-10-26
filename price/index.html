@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f7f3ee">
 <title>Конструктор прайс-листа</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Raleway:ital,wght@0,400;0,600;0,700;1,400&family=Manrope:wght@400;600;700&family=Nunito:ital,wght@0,400;0,700;1,400&family=Comfortaa:wght@400;700&family=Oswald:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Lora:ital,wght@0,400;0,700;1,400&family=Prata&family=Forum&family=Poiret+One&family=Marck+Script&family=Bad+Script&family=Caveat:wght@400;700&family=Lobster&family=Amatic+SC:wght@400;700&display=swap">
-<link rel="stylesheet" href="../kit/kit.css?v=202610251217">
+<link rel="stylesheet" href="../kit/kit.css?v=202610262050">
 <script>try { var u = localStorage.getItem("beauty.ui"); if (u) document.documentElement.dataset.ui = u; } catch (e) {}</script>
 </head>
 <body>
@@ -85,8 +85,9 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="../kit/backgrounds.js?v=202610251217"></script>
-<script src="../kit/kit.js?v=202610251217"></script>
+<script src="../kit/backgrounds.js?v=202610262050"></script>
+<script src="../kit/trends.js?v=202610262050"></script>
+<script src="../kit/kit.js?v=202610262050"></script>
 <script>
 // ---------- справочник услуг (Лэшмейкер — список Ларисы с ценами, остальное — по Яндекс Картам, без цен) ----------
 const PROFS = [
@@ -150,7 +151,8 @@ function fmtPrice(raw) {
 }
 
 // ---------- рисование ----------
-const canvas = $("cv"), ctx = canvas.getContext("2d"), dr = Kit.painter(ctx);
+const canvas = $("cv");
+let ctx = canvas.getContext("2d"), dr = Kit.painter(ctx);            // let — превью фонов временно рисуют на своём холсте
 let H = 1920;
 function services(top, bottom, t, P) {
   const items = S.services.filter(s => s.name.trim() || s.price.trim());
@@ -189,19 +191,27 @@ function draw() {
   const t = th(), F = FORMATS[S.format] || FORMATS.story;
   if (H !== F.h || canvas.width !== W * SCALE) { H = F.h; canvas.width = W * SCALE; canvas.height = H * SCALE; }
   ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0); ctx.globalAlpha = 1; ctx.textBaseline = "alphabetic";
+  paint(t, F);
+  $("size").textContent = `Картинка ${W * SCALE} × ${H * SCALE} — для сторис, мессенджеров и печати`;
+}
+function paint(t, F) {
   Kit.drawBg(ctx, t, W, H);
   const y = Kit.header(dr, t, F, { title: S.title, titleDefault: "Прайс-лист", subtitle: S.subtitle, master: prof.master }, style);
   const foot = Kit.footer(dr, t, F, Kit.forSection(prof, S.contacts), style), footTop = H - F.bottom - foot.h;
   services(y + 56, footTop - 64, t, 96);
   foot.draw(footTop);
   if (S.watermark) dr.watermark(t, H);
-  $("size").textContent = `Картинка ${W * SCALE} × ${H * SCALE} — для сторис, мессенджеров и печати`;
+}
+// миниатюра в «Дизайне»: та же картинка с другим фоном
+function preview(c, t) {
+  const keep = [ctx, dr, S.theme, S.watermark]; ctx = c; dr = Kit.painter(c); S.theme = t.id; S.watermark = false;   // водяной знак в миниатюре только мешает
+  try { paint(t, FORMATS[S.format] || FORMATS.story); } finally { [ctx, dr, S.theme, S.watermark] = keep; }
 }
 let raf = 0;
 function changed() { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); Kit.store.set(KEY, JSON.stringify(S)); }
 
 // ---------- панели ----------
-const design = Kit.designPanel($("design"), S, kind => { if (kind === "theme") fonts.refresh(); changed(); }, { own: "price", self: "price" });
+const design = Kit.designPanel($("design"), S, kind => { if (kind === "theme") fonts.refresh(); changed(); }, { own: "price", self: "price", preview });
 const fonts = Kit.fontsPanel($("fonts"), TEXTS, S, style, changed);
 const contacts = Kit.showPanel($("contacts"), prof, S.contacts, changed);
 const tabs = Kit.tabs($("tabs"), "price.tab", name => { if (name === "design") design.show(); });
