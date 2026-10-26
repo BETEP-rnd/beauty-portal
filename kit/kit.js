@@ -498,7 +498,11 @@
       if (!has && had && k !== "wa") { prof.soc[k].on = false; $i(k + "-on").checked = false; }
       prof.soc[k].val = e.target.value; changed();
     });
-    return { focus: id => { const el = $i(id); if (el) el.focus(); } };
+    return { focus: id => {                                     // курсор в поле и подсветка строки — когда пришли из раздела «заполнить»
+      const el = $i(id); if (!el) return;
+      el.focus(); el.scrollIntoView({ block: "center" });
+      const box = el.closest(".socin, .field"); if (box) { box.classList.add("flash"); setTimeout(() => box.classList.remove("flash"), 2500); }
+    } };
   }
 
   // раздел: мастер и телефон — из кабинета; здесь выбираем, какие контакты и какой QR будут на картинке
@@ -517,7 +521,7 @@
       $r("who").innerHTML = `${esc(prof.master.trim() || "Имя не указано")} · ${esc(fmtPhone(prof.phone) || "телефон не указан")} — <a href="${cabinetUrl}">изменить в кабинете</a>`;
       $r("chips").innerHTML = SHOW.map(({ k, name }) => avail(prof, k)
         ? `<button type="button" class="chip" data-k="${k}" aria-pressed="${!!sel[k]}">${name}</button>`
-        : `<button type="button" class="chip" disabled title="Не заполнено в кабинете" style="opacity:.45">${name}</button>`).join("");
+        : `<a class="chip off" href="${cabinetUrl}#${k}" title="Не заполнено или выключено в кабинете — нажмите, чтобы заполнить">${name} <span>+</span></a>`).join("");
       $r("qr").innerHTML = `<option value="none">Без QR-кода</option>` + SOCIALS.filter(({ k }) => avail(prof, k)).map(({ k, name }) => `<option value="${k}">${name}</option>`).join("") + `<option value="url">Своя ссылка</option>`;
       $r("qr").value = [...$r("qr").options].some(o => o.value === sel.qr) ? sel.qr : "none";
       $r("qrUrl").value = sel.qrUrl; press($r("layout"), sel.layout);
