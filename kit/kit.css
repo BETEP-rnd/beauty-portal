@@ -153,8 +153,26 @@ details.month > .days { padding-bottom: 14px; }
 
 @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } .preview { position: static; order: -1; } .preview canvas { max-width: 320px; } }
 @media (max-width: 520px) {
-  .svc { grid-template-columns: minmax(0, 1fr) auto; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
-  .svc .name { grid-column: 1 / -1; }
+  /* телефон: компактнее — мельче поля и кнопки, меньше отступы (масштаб при фокусе отключён в meta viewport) */
+  body { font-size: 13.5px; }
+  header.top h1 { font-size: 30px; }
+  .panel { padding: 0 14px 16px; gap: 16px; }
+  nav.tabs { margin: 0 -14px; }
+  .tab, .tab > div { gap: 16px; }
+  section.group { gap: 10px; }
+  section.group + section.group, .tab > div + section.group, .tab > section.group + div { padding-top: 14px; }
+  .row { gap: 8px; }
+  .field { gap: 4px; }
+  input[type="text"], input[type="tel"], input[type="url"], input[type="email"], input[type="date"], input[type="time"], select { font-size: 14px; padding: 7px 10px; border-radius: 8px; }
+  .seg button, .chip { font-size: 12.5px; padding: 7px 10px; }
+  .btn { font-size: 13.5px; padding: 10px 12px; }
+  .check { font-size: 13px; }
+  /* услуга одной строкой: название, цена, ↑ ↓ × */
+  .svcs { gap: 6px; }
+  .svc { grid-template-columns: minmax(0, 1fr) 64px auto; gap: 4px; }
+  .svc .tools { gap: 2px; }
+  .svc .icon { min-width: 26px; height: 33px; padding: 0 4px; font-size: 13px; }
+  .svc .icon.del { font-size: 17px; }
 }
 @media (max-width: 420px) {
   .row { grid-template-columns: 1fr; }
