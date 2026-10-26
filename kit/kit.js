@@ -226,7 +226,7 @@
     const socs = SOCIALS.filter(s => prof.soc[s.k].on).map(s => ({ icon: s.k, text: prof.soc[s.k].logo ? "" : socText(prof, s.k), size: socSize, weight: socWeight, color: st.color }));
     if (prof.showEmail && (prof.email || "").trim()) socs.push({ icon: "mail", text: prof.email.trim(), size: socSize, weight: socWeight, color: st.color });
     const qr = qrTarget(prof), qs = F.qr, capH = 46, colW = qr.url ? W - 2 * P - qs - 44 : W - 2 * P;
-    const LOGO = 1.25;                                          // значок без подписи («только логотип») — чуть крупнее
+    const LOGO = 1.6;                                           // значок без подписи («только логотип») — крупнее, чтобы читался
     const itemW = it => { if (!it.text) return it.size * LOGO; ctx.font = fontOf(st, it.size, it.weight); return it.size * 1.3 + ctx.measureText(caseOf(st, it.text)).width; };
     const lines = [[phone]];                                    // строки подвала: телефон, потом соцсети
     if (prof.socLayout === "col") {                             // столбиком — соцсети с подписью, значки без подписи одной строкой в конце
@@ -442,6 +442,21 @@
     return { ...prof, soc, showEmail: !!sel.email && avail(prof, "email"), socLayout: sel.layout, qr: sel.qr, qrUrl: sel.qrUrl };
   }
 
+  // контакты строкой для страниц (кабинет, онлайн-запись): значок и ник; «только логотип» — один значок; соцсети — ссылками
+  const iconSvg = name => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name].map(d => `<path d="${d}"/>`).join("")}</svg>`;
+  function contactsHtml(prof) {
+    const out = [], phone = fmtPhone(prof.phone);
+    if (phone) out.push(`<a class="ct" href="tel:+${normPhone(prof.phone)}">${iconSvg("phone")}${esc(phone)}</a>`);
+    SOCIALS.forEach(({ k, name }) => {
+      if (!avail(prof, k)) return;
+      const url = qrTarget({ ...prof, qr: k }).url, logo = prof.soc[k].logo;
+      const inner = iconSvg(k) + (logo ? "" : esc(socText(prof, k))), attrs = `class="ct${logo ? " logo" : ""}" title="${esc(name)}" aria-label="${esc(logo ? name : name + ": " + socText(prof, k))}"`;
+      out.push(url ? `<a ${attrs} href="${esc(url)}" target="_blank" rel="noopener">${inner}</a>` : `<span ${attrs}>${inner}</span>`);
+    });
+    if (avail(prof, "email")) out.push(`<a class="ct" href="mailto:${esc(prof.email.trim())}">${iconSvg("mail")}${esc(prof.email.trim())}</a>`);
+    return out.join("");
+  }
+
   // кабинет: мастер и все контакты одним списком — заполняются один раз
   function contactsPanel(root, prof, onChange) {
     root.innerHTML = `<section class="group">
@@ -552,7 +567,7 @@
 
   Object.assign(Kit, {
     W, SCALE, FORMATS, FONTS, SCRIPTS, SOCIALS, store, loadJSON, esc,
-    digits, normPhone, fmtPhone, maskPhone, group, socText, qrTarget, loadProfile, saveProfile,
+    digits, normPhone, fmtPhone, maskPhone, group, socText, qrTarget, contactsHtml, loadProfile, saveProfile,
     baseStyle, styleOf, fontOf, caseOf, painter, header, footer, press,
     tabs, designPanel, takenThemes, claimTheme, SECTIONS, fontsPanel, contactsPanel, showPanel, defaultShow, forSection, output, profileError, safeName, PRESET,
   });
