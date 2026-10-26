@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f7f3ee">
 <title>Свободные окошки</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Raleway:ital,wght@0,400;0,600;0,700;1,400&family=Manrope:wght@400;600;700&family=Nunito:ital,wght@0,400;0,700;1,400&family=Comfortaa:wght@400;700&family=Oswald:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Lora:ital,wght@0,400;0,700;1,400&family=Prata&family=Forum&family=Poiret+One&family=Marck+Script&family=Bad+Script&family=Caveat:wght@400;700&family=Lobster&family=Amatic+SC:wght@400;700&display=swap">
-<link rel="stylesheet" href="../kit/kit.css?v=202610262220">
+<link rel="stylesheet" href="../kit/kit.css?v=202610262221">
 <script>try { var u = localStorage.getItem("beauty.ui"); if (u) document.documentElement.dataset.ui = u; } catch (e) {}</script>
 </head>
 <body>
@@ -95,9 +95,9 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="../kit/backgrounds.js?v=202610262220"></script>
-<script src="../kit/trends.js?v=202610262220"></script>
-<script src="../kit/kit.js?v=202610262220"></script>
+<script src="../kit/backgrounds.js?v=202610262221"></script>
+<script src="../kit/trends.js?v=202610262221"></script>
+<script src="../kit/kit.js?v=202610262221"></script>
 <script>
 const TEXTS = [
   { k: "title", name: "Заголовок" }, { k: "subtitle", name: "Подзаголовок" }, { k: "master", name: "Имя мастера" },
@@ -408,7 +408,11 @@ function summary(iso) {
   if (!iv.length) return { text: "занято", warn: false };
   const short = S.minLen ? iv.filter(([a, b]) => b - a < S.minLen) : [];
   const text = iv.map(([a, b]) => `${hm(a)}–${hm(b)}`).join(", ");
-  return short.length ? { text: `${text} · окно ${short.map(([a, b]) => `${hm(a)}–${hm(b)}`).join(", ")} короче ${dur(S.minLen)}`, warn: true } : { text, warn: false };
+  if (!short.length) return { text, warn: false };
+  const note = short.length === iv.length                      // все короткие — не повторяем список, иначе называем только короткие
+    ? (iv.length > 1 ? `все короче ${dur(S.minLen)}` : `короче ${dur(S.minLen)}`)
+    : `короче ${dur(S.minLen)}: ${short.map(([a, b]) => `${hm(a)}–${hm(b)}`).join(", ")}`;
+  return { text: `${text} · ${note}`, warn: true };
 }
 const openMonths = new Set();                                   // какие месяцы развёрнуты (первый — всегда при старте)
 function monthStat(mk) { const ds = dates().filter(d => d.startsWith(mk)); return `${ds.filter(d => intervals(d).length).length} из ${ds.length} дн. с окошками`; }
