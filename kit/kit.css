@@ -68,7 +68,7 @@ input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px s
 .seg button + button { border-left: 1px solid var(--line); }
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 
-.cats { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.cats { display: grid; grid-auto-flow: column; grid-template-rows: auto auto; justify-content: start; gap: 8px; overflow-x: auto; padding-bottom: 4px; }   /* категории в две строки — прокрутка вдвое короче */
 .chip { border: 1px solid var(--line); background: var(--field); color: var(--text); border-radius: 99px; padding: 8px 14px; font: inherit; font-size: 13.5px; cursor: pointer; white-space: nowrap; }
 .chip span { color: var(--muted); font-size: 12px; }
 .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
