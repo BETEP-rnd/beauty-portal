@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f7f3ee">
 <title>Онлайн-запись</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Montserrat:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="../kit/kit.css?v=202610262223">
+<link rel="stylesheet" href="../kit/kit.css?v=202610262225">
 <script>try { var u = localStorage.getItem("beauty.ui"); if (u) document.documentElement.dataset.ui = u; } catch (e) {}</script>
 <style>
   /* Страница записи глазами клиента: шаги сверху вниз — услуга, день, время, контакты. */
@@ -26,6 +26,8 @@
   .svc-item .price { color: var(--accent); font-weight: 600; white-space: nowrap; }
   .svc-item .dur { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); }
   .svc-item[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .svc-total { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 4px; font-size: 14px; }
+  .svc-total .btn { flex: none; padding: 10px 22px; }
   .days-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; }
   .day-btn { flex: 0 0 auto; width: 72px; border: 1px solid var(--line); background: var(--field); color: var(--text); border-radius: 12px; padding: 10px 4px; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .day-btn small { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
@@ -91,9 +93,10 @@
     </section>
 
     <section class="step" id="s1">
-      <h2><i>1</i>Услуга</h2>
+      <h2><i>1</i>Услуги</h2>
       <div class="pick" id="svcHint"></div>
       <div class="svc-list" id="svcs"></div>
+      <div class="svc-total" id="svcTotal" hidden><span id="svcSum"></span><button class="btn" type="button" id="svcNext">Дальше</button></div>
     </section>
 
     <section class="step off" id="s2">
@@ -130,9 +133,9 @@
   </div>
 </div>
 
-<script src="../kit/backgrounds.js?v=202610262223"></script>
-<script src="../kit/trends.js?v=202610262223"></script>
-<script src="../kit/kit.js?v=202610262223"></script>
+<script src="../kit/backgrounds.js?v=202610262225"></script>
+<script src="../kit/trends.js?v=202610262225"></script>
+<script src="../kit/kit.js?v=202610262225"></script>
 <script>
 // Демо: окошки берутся из раздела «Свободные окошки», услуги и цены — из «Прайс-листа» этого браузера.
 // Запись никуда не отправляется и не сохраняется.
@@ -197,8 +200,17 @@ const WIN = windowsByDay();
 // времена начала, когда услуга целиком помещается в окно
 const startsFor = (iso, dur) => (WIN[iso] || []).flatMap(([s, e]) => { const out = []; for (let t = s; t + dur <= e; t += STEP) out.push(t); return out; });
 
+// несколько услуг за визит: время и цена складываются; наращивание — только одно, «снятие без наращивания» — без наращивания
+const kind = n => /снятие.*без/i.test(n) ? "off" : /нижн/i.test(n) ? "low" : /объ[её]м|уголк|классик|\b\d([,.]\d)?d\b/i.test(n) ? "ext" : "";
+const CLASH = { ext: ["ext", "off"], low: ["off"], off: ["ext", "low"] };
+const clashWith = i => { const k = kind(SVCS[i].name); return k ? sel.svcs.find(j => j !== i && (CLASH[k] || []).includes(kind(SVCS[j].name))) : undefined; };
+const total = () => {
+  const list = sel.svcs.map(i => SVCS[i]), nums = list.map(s => parseInt((s.price || "").replace(/\D/g, ""), 10)).filter(n => n > 0);
+  return { dur: list.reduce((a, s) => a + s.dur, 0), price: nums.reduce((a, n) => a + n, 0), names: list.map(s => s.name).join(" + "), n: list.length };
+};
+
 // ---------- шаги ----------
-const sel = { svc: null, day: null, time: null, mode: Kit.store.get("booking.mode") === "date" ? "date" : "svc" };
+const sel = { svcs: [], day: null, time: null, mode: Kit.store.get("booking.mode") === "date" ? "date" : "svc" };
 const ORDER = { svc: ["s1", "s2", "s3", "s4"], date: ["sCal", "s1", "s3", "s4"] };   // «по услугам» и «по дате»
 const MON_NOM = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
 let calMonth = (Object.keys(WIN).sort()[0] || today).slice(0, 7);
@@ -210,7 +222,7 @@ function applyMode() {
   reset();
 }
 function reset() {
-  sel.svc = sel.day = sel.time = null;
+  sel.svcs = []; sel.day = sel.time = null;
   buildServices(); $("days").innerHTML = ""; $("times").innerHTML = "";
   if (sel.mode === "date") {
     buildCalendar(); step("sCal", true); step("s1", false); step("s3", false); step("s4", false);
@@ -244,39 +256,50 @@ function buildHeader() {
     + `. Длительность услуг пока примерная. Запись никуда не отправляется и не сохраняется.`;
 }
 function buildServices() {
-  const byDate = sel.mode === "date" && sel.day;
+  const byDate = sel.mode === "date" && sel.day, sum = total().dur;
   $("svcs").innerHTML = SVCS.map((s, i) => {
-    const fits = !byDate || startsFor(sel.day, s.dur).length > 0;
-    return `<button type="button" class="svc-item" data-i="${i}" ${fits ? "" : "disabled"} aria-pressed="${sel.svc === i}">
-      <b>${esc(s.name)}</b><span class="price">${esc(money(s.price))}</span><span class="dur">≈ ${durText(s.dur)}${fits ? "" : " · в этот день не помещается"}</span></button>`;
+    const on = sel.svcs.includes(i), clash = on ? undefined : clashWith(i);
+    const fits = on || !byDate || startsFor(sel.day, sum + s.dur).length > 0;
+    const why = clash !== undefined ? ` · не сочетается с «${esc(SVCS[clash].name)}»` : fits ? "" : sel.svcs.length ? " · вместе с выбранным не помещается" : " · в этот день не помещается";
+    return `<button type="button" class="svc-item" data-i="${i}" ${fits && clash === undefined ? "" : "disabled"} aria-pressed="${on}">
+      <b>${on ? "✓ " : ""}${esc(s.name)}</b><span class="price">${esc(money(s.price))}</span><span class="dur">≈ ${durText(s.dur)}${why}</span></button>`;
   }).join("");
+  const t = total();
+  $("svcTotal").hidden = !t.n;
+  $("svcSum").innerHTML = t.n ? `${t.n > 1 ? `${t.n} услуги · ` : ""}≈ ${durText(t.dur)}${t.price ? ` · <b>${esc(money(String(t.price)))}</b>` : ""}` : "";
+  $("svcNext").textContent = sel.mode === "date" ? "Выбрать время" : "Выбрать день";
 }
 function buildDays() {
-  const s = SVCS[sel.svc], days = Object.keys(WIN).sort();
+  const t = total(), days = Object.keys(WIN).sort();
   $("days").innerHTML = days.map(iso => {
-    const d = fromIso(iso), n = startsFor(iso, s.dur).length;
+    const d = fromIso(iso), n = startsFor(iso, t.dur).length;
     return `<button type="button" class="day-btn" data-iso="${iso}" ${n ? "" : "disabled"} aria-pressed="${sel.day === iso}">
       <small>${DOW[d.getDay()]}</small><b>${d.getDate()}</b><span>${n ? MON_SHORT[d.getMonth()] : "нет мест"}</span></button>`;
   }).join("");
-  const any = days.some(iso => startsFor(iso, s.dur).length);
-  $("dayHint").textContent = any ? `Дни, когда «${s.name}» (≈ ${durText(s.dur)}) помещается в свободное время.` : "Для этой услуги свободного времени пока нет — напишите мастеру.";
+  const any = days.some(iso => startsFor(iso, t.dur).length);
+  $("dayHint").textContent = any ? `Дни, когда ${t.n > 1 ? "выбранные услуги" : `«${t.names}»`} (≈ ${durText(t.dur)}) помещаются в свободное время.` : "Для выбранного свободного времени пока нет — напишите мастеру.";
 }
 function buildTimes() {
-  const s = SVCS[sel.svc], d = fromIso(sel.day), list = startsFor(sel.day, s.dur);
+  const d = fromIso(sel.day), list = startsFor(sel.day, total().dur);
   $("timeHint").textContent = `${DOW_LONG[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]} — начало процедуры:`;
   $("times").innerHTML = list.map(t => `<button type="button" class="time-btn" data-t="${t}" aria-pressed="${sel.time === t}">${hm(t)}</button>`).join("");
 }
 function summaryText() {
-  const s = SVCS[sel.svc], d = fromIso(sel.day);
-  return `<b>${esc(s.name)}</b>${s.price ? " · " + esc(money(s.price)) : ""}<br>${DOW_LONG[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]}, ${hm(sel.time)}–${hm(sel.time + s.dur)}`;
+  const t = total(), d = fromIso(sel.day);
+  return `<b>${esc(t.names)}</b>${t.price ? " · " + esc(money(String(t.price))) : ""}<br>${DOW_LONG[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]}, ${hm(sel.time)}–${hm(sel.time + t.dur)}`;
 }
-$("svcs").addEventListener("click", e => {
+$("svcs").addEventListener("click", e => {                     // выбираем одну или несколько; дальше — кнопкой «Дальше»
   const b = e.target.closest(".svc-item"); if (!b || b.disabled) return;
-  sel.svc = +b.dataset.i; sel.time = null;
-  if (sel.mode === "date") { buildServices(); buildTimes(); step("s3", true); step("s4", false); $("s3").scrollIntoView({ behavior: "smooth", block: "nearest" }); return; }
-  sel.day = null;
-  buildServices(); buildDays(); $("times").innerHTML = ""; $("timeHint").textContent = "Выберите день.";
-  step("s2", true); step("s3", false); step("s4", false);
+  const i = +b.dataset.i;
+  sel.svcs = sel.svcs.includes(i) ? sel.svcs.filter(j => j !== i) : [...sel.svcs, i];
+  sel.time = null; if (sel.mode === "svc") sel.day = null;
+  buildServices(); $("times").innerHTML = ""; $("days").innerHTML = "";
+  step("s2", false); step("s3", false); step("s4", false);
+});
+$("svcNext").addEventListener("click", () => {
+  if (!sel.svcs.length) return;
+  if (sel.mode === "date") { buildTimes(); step("s3", true); $("s3").scrollIntoView({ behavior: "smooth", block: "nearest" }); return; }
+  buildDays(); $("timeHint").textContent = "Выберите день."; step("s2", true);
   $("s2").scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
 $("days").addEventListener("click", e => {
@@ -293,7 +316,7 @@ $("times").addEventListener("click", e => {
 });
 $("cal").addEventListener("click", e => {
   const b = e.target.closest(".cal-day"); if (!b || b.disabled) return;
-  sel.day = b.dataset.iso; sel.svc = null; sel.time = null;
+  sel.day = b.dataset.iso; sel.svcs = []; sel.time = null;
   const d = fromIso(sel.day);
   buildCalendar(); buildServices(); $("times").innerHTML = ""; $("timeHint").textContent = "Выберите услугу.";
   $("svcHint").textContent = `${DOW_LONG[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]} — услуги, которые помещаются в свободное время:`;
