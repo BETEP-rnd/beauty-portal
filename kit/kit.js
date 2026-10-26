@@ -426,8 +426,8 @@
     return { refresh: build, fontsInUse: () => items.map(({ k }) => fontOf(styleFn(k), 40)) };
   }
 
-  // какие контакты заполнены в кабинете: WhatsApp — по галочке (номер берётся основной, если свой не указан), остальные — по значению
-  const avail = (prof, k) => k === "email" ? !!(prof.email || "").trim() : k === "wa" ? !!prof.soc.wa.on : !!prof.soc[k].val.trim();
+  // какие контакты включены в кабинете: соцсеть — по галочке (WhatsApp без своего номера берёт основной), почта — по значению
+  const avail = (prof, k) => k === "email" ? !!(prof.email || "").trim() : !!prof.soc[k].on && (k === "wa" || !!prof.soc[k].val.trim());
   const SHOW = [...SOCIALS, { k: "email", name: "Почта" }];
   // выбор раздела «что показать на картинке»; по умолчанию — всё, что заполнено в кабинете
   function defaultShow(prof) {
@@ -450,32 +450,37 @@
       <div class="field"><label for="k-master" class="req">Имя мастера</label><input id="k-master" type="text" maxlength="40" placeholder="Например, Лариса Чурилова"></div>
       <div class="field"><label for="k-phone" class="req">Телефон</label><input id="k-phone" type="tel" inputmode="tel" placeholder="+7 (999) 999-99-99" maxlength="18"></div>
       <div class="field"><label for="k-email">Почта</label><input id="k-email" type="email" inputmode="email" autocomplete="email" placeholder="name@mail.ru"></div>
-      <span class="lbl">Соцсети — заполните те, что есть</span>
+      <span class="lbl">Соцсети — отметьте те, что есть, и впишите ник или номер</span>
       <span class="hint">«Только логотип» — на картинке будет значок соцсети без ника и номера. Удобно, когда WhatsApp на тот же номер, что и телефон.</span>
       <div class="socin sochead" aria-hidden="true"><span></span><span></span><span>только логотип</span></div>
       <div class="socin"><label class="check"><input type="checkbox" id="k-wa-on"> WhatsApp</label>
         <input type="tel" id="k-soc-wa" data-k="wa" inputmode="tel" maxlength="18" placeholder="номер, если не тот же">
         <label class="check logo"><input type="checkbox" data-logo="wa" aria-label="WhatsApp — только логотип"><span>только логотип</span></label></div>
-      <div class="socin"><label for="k-soc-tg">Telegram</label><input type="text" id="k-soc-tg" data-k="tg" placeholder="@ник или t.me/…">
+      <div class="socin"><label class="check"><input type="checkbox" id="k-tg-on"> Telegram</label><input type="text" id="k-soc-tg" data-k="tg" placeholder="@ник или t.me/…">
         <label class="check logo"><input type="checkbox" data-logo="tg" aria-label="Telegram — только логотип"><span>только логотип</span></label></div>
-      <div class="socin"><label for="k-soc-ig">Instagram</label><input type="text" id="k-soc-ig" data-k="ig" placeholder="@ник">
+      <div class="socin"><label class="check"><input type="checkbox" id="k-ig-on"> Instagram</label><input type="text" id="k-soc-ig" data-k="ig" placeholder="@ник">
         <label class="check logo"><input type="checkbox" data-logo="ig" aria-label="Instagram — только логотип"><span>только логотип</span></label></div>
-      <div class="socin"><label for="k-soc-max">MAX</label><input type="text" id="k-soc-max" data-k="max" placeholder="ссылка на профиль или номер">
+      <div class="socin"><label class="check"><input type="checkbox" id="k-max-on"> MAX</label><input type="text" id="k-soc-max" data-k="max" placeholder="ссылка на профиль или номер">
         <label class="check logo"><input type="checkbox" data-logo="max" aria-label="MAX — только логотип"><span>только логотип</span></label></div>
     </section>`;
     const $i = id => root.querySelector("#k-" + id), deleting = e => (e.inputType || "").startsWith("delete");
     const changed = () => { saveProfile(prof); onChange("profile"); };
-    $i("master").value = prof.master; $i("phone").value = prof.phone; $i("email").value = prof.email; $i("wa-on").checked = prof.soc.wa.on;
-    SOCIALS.forEach(({ k }) => { $i("soc-" + k).value = prof.soc[k].val; root.querySelector(`[data-logo="${k}"]`).checked = !!prof.soc[k].logo; });
-    root.addEventListener("change", e => { const k = e.target.dataset.logo; if (!k) return; prof.soc[k].logo = e.target.checked; changed(); });
+    $i("master").value = prof.master; $i("phone").value = prof.phone; $i("email").value = prof.email;
+    SOCIALS.forEach(({ k }) => { $i(k + "-on").checked = prof.soc[k].on; $i("soc-" + k).value = prof.soc[k].val; root.querySelector(`[data-logo="${k}"]`).checked = !!prof.soc[k].logo; });
+    root.addEventListener("change", e => {
+      const on = (e.target.id || "").match(/^k-(\w+)-on$/), k = e.target.dataset.logo;
+      if (on) { prof.soc[on[1]].on = e.target.checked; changed(); }
+      if (k) { prof.soc[k].logo = e.target.checked; changed(); }
+    });
     $i("master").addEventListener("input", e => { prof.master = e.target.value; changed(); });
     $i("phone").addEventListener("input", e => { e.target.value = maskPhone(e.target.value, deleting(e)); prof.phone = e.target.value; changed(); });
     $i("email").addEventListener("input", e => { prof.email = e.target.value; changed(); });
-    $i("wa-on").addEventListener("change", e => { prof.soc.wa.on = e.target.checked; changed(); });
-    root.addEventListener("input", e => {
+    root.addEventListener("input", e => {                       // вписали значение — соцсеть включается сама; галкой можно скрыть, не стирая
       const k = e.target.dataset.k; if (!k) return;
-      if (k === "wa") { e.target.value = maskPhone(e.target.value, deleting(e)); if (e.target.value) { prof.soc.wa.on = true; $i("wa-on").checked = true; } }
-      else prof.soc[k].on = !!e.target.value.trim();
+      if (k === "wa") e.target.value = maskPhone(e.target.value, deleting(e));
+      const had = !!prof.soc[k].val.trim(), has = !!e.target.value.trim();
+      if (has && !had) { prof.soc[k].on = true; $i(k + "-on").checked = true; }
+      if (!has && had && k !== "wa") { prof.soc[k].on = false; $i(k + "-on").checked = false; }
       prof.soc[k].val = e.target.value; changed();
     });
     return { focus: id => { const el = $i(id); if (el) el.focus(); } };
