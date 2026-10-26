@@ -106,6 +106,7 @@
     if (!saved || (!(saved.master || "").trim() && !digits(saved.phone))) saved = PRESET;
     ["master", "phone", "email", "socLayout", "qr", "qrUrl"].forEach(k => { if (typeof saved[k] === "string") p[k] = saved[k]; });
     p.showEmail = !!saved.showEmail;
+    p.hideBusy = !!saved.hideBusy;                              // «Свободные окошки»: не показывать дни без окошек
     if (saved.soc) SOCIALS.forEach(({ k }) => { if (saved.soc[k]) p.soc[k] = { on: !!saved.soc[k].on, val: saved.soc[k].val || "", logo: !!saved.soc[k].logo }; });
     p.phone = maskPhone(p.phone);
     return p;
@@ -482,6 +483,8 @@
         <label class="check logo"><input type="checkbox" data-logo="ig" aria-label="Instagram — только логотип"><span>только логотип</span></label></div>
       <div class="socin"><label class="check"><input type="checkbox" id="k-max-on"> MAX</label><input type="text" id="k-soc-max" data-k="max" placeholder="ссылка на профиль или номер">
         <label class="check logo"><input type="checkbox" data-logo="max" aria-label="MAX — только логотип"><span>только логотип</span></label></div>
+      <span class="lbl">Свободные окошки</span>
+      <label class="check"><input type="checkbox" id="k-hideBusy"> Не показывать дни без окошек</label>
     </section>`;
     const $i = id => root.querySelector("#k-" + id), deleting = e => (e.inputType || "").startsWith("delete");
     const changed = () => { saveProfile(prof); onChange("profile"); };
@@ -495,6 +498,8 @@
     $i("master").addEventListener("input", e => { prof.master = e.target.value; changed(); });
     $i("phone").addEventListener("input", e => { e.target.value = maskPhone(e.target.value, deleting(e)); prof.phone = e.target.value; changed(); });
     $i("email").addEventListener("input", e => { prof.email = e.target.value; changed(); });
+    $i("hideBusy").checked = prof.hideBusy;
+    $i("hideBusy").addEventListener("change", e => { prof.hideBusy = e.target.checked; changed(); });
     root.addEventListener("input", e => {                       // вписали значение — соцсеть включается сама; галкой можно скрыть, не стирая
       const k = e.target.dataset.k; if (!k) return;
       if (k === "wa") e.target.value = maskPhone(e.target.value, deleting(e));
