@@ -157,8 +157,12 @@ details.month > .days { padding-bottom: 14px; }
   .svc .name { grid-column: 1 / -1; }
 }
 @media (max-width: 420px) {
-  .row { grid-template-columns: 1fr; } .socin { grid-template-columns: 1fr; }
-  .sochead { display: none; } .check.logo { justify-self: start; } .check.logo span { display: inline; }
+  .row { grid-template-columns: 1fr; }
+  /* телефон: «✓ WhatsApp … □ только логотип» одной строкой, поле — под ними */
+  .socin { grid-template-columns: 1fr auto; grid-template-areas: "name logo" "input input"; gap: 6px 8px; }
+  .socin + .socin { margin-top: 8px; }
+  .socin > .check:first-child { grid-area: name; } .socin > input { grid-area: input; }
+  .sochead { display: none; } .check.logo { grid-area: logo; justify-self: end; } .check.logo span { display: inline; }
   nav.tabs button { flex: 1; padding: 14px 4px 10px; font-size: 12px; letter-spacing: .04em; }
   .thumbs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   .slot { height: 38px; }
