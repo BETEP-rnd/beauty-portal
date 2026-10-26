@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f7f3ee">
 <title>Личный кабинет</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Montserrat:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="kit/kit.css?v=202610270007">
+<link rel="stylesheet" href="kit/kit.css?v=202610270008">
 <script>try { var u = localStorage.getItem("beauty.ui"); if (u) document.documentElement.dataset.ui = u; } catch (e) {}</script>
 <style>
   /* Кабинет: слева приветствие и разделы, справа «Мои данные»; на телефоне — друг под другом. */
@@ -22,6 +22,21 @@
   .card.soon { opacity: .6; }
   .card.soon:hover { border-color: var(--line); }
   .me { padding-top: 22px; }
+  /* «Мои данные» — крупнее, чем панели в разделах */
+  .me h2 { font-size: 14px; }
+  .me label, .me .lbl { font-size: 14px; }
+  .me .check { font-size: 16px; }
+  .me .check.logo, .me .sochead span, .me .hint, .me .linkbtn { font-size: 14px; }
+  .me .seg button { font-size: 15px; }
+  @media (min-width: 421px) { .me .socin { grid-template-columns: 128px minmax(0, 1fr) auto; } }
+  .me .check input { width: 18px; height: 18px; }
+  .me input[type="text"], .me input[type="tel"], .me input[type="url"], .me input[type="email"] { font-size: 17px; }
+  @media (max-width: 520px) {
+    .me label, .me .lbl, .me .check.logo, .me .hint, .me .linkbtn { font-size: 13.5px; }
+    .me .check { font-size: 15px; }
+    .me .seg button { font-size: 14px; }
+    .me input[type="text"], .me input[type="tel"], .me input[type="url"], .me input[type="email"] { font-size: 16px; }
+  }
   @media (max-width: 860px) { .cab { grid-template-columns: minmax(0, 1fr); } }
 </style>
 </head>
@@ -48,9 +63,9 @@
   </div>
 </div>
 
-<script src="kit/backgrounds.js?v=202610270007"></script>
-<script src="kit/trends.js?v=202610270007"></script>
-<script src="kit/kit.js?v=202610270007"></script>
+<script src="kit/backgrounds.js?v=202610270008"></script>
+<script src="kit/trends.js?v=202610270008"></script>
+<script src="kit/kit.js?v=202610270008"></script>
 <script>
 const prof = Kit.loadProfile(), $ = id => document.getElementById(id);
 function hello() {
