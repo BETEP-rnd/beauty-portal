@@ -488,7 +488,7 @@
         <label class="check logo"><input type="checkbox" data-logo="max" aria-label="MAX — только логотип"><span>только логотип</span></label></div>
       <div class="field"><span class="lbl">Соцсети на картинках</span>
         <div class="seg" id="k-layout"><button type="button" data-k="row">В строку</button><button type="button" data-k="col">Столбиком</button></div></div>
-      <label class="check"><input type="checkbox" id="k-qrBare"> QR-код без светлой плашки — только узор на фоне</label>
+      <label class="check"><input type="checkbox" id="k-qrBare"> QR-код с прозрачным фоном</label>
       <span class="lbl">Свободные окошки</span>
       <label class="check"><input type="checkbox" id="k-hideBusy"> Не показывать дни без окошек</label>
     </section>`;
