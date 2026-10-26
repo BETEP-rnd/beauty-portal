@@ -452,15 +452,16 @@
       <div class="field"><label for="k-email">Почта</label><input id="k-email" type="email" inputmode="email" autocomplete="email" placeholder="name@mail.ru"></div>
       <span class="lbl">Соцсети — заполните те, что есть</span>
       <span class="hint">«Только логотип» — на картинке будет значок соцсети без ника и номера. Удобно, когда WhatsApp на тот же номер, что и телефон.</span>
+      <div class="socin sochead" aria-hidden="true"><span></span><span></span><span>только логотип</span></div>
       <div class="socin"><label class="check"><input type="checkbox" id="k-wa-on"> WhatsApp</label>
         <input type="tel" id="k-soc-wa" data-k="wa" inputmode="tel" maxlength="18" placeholder="номер, если не тот же">
-        <label class="check logo"><input type="checkbox" data-logo="wa"> только логотип</label></div>
+        <label class="check logo"><input type="checkbox" data-logo="wa" aria-label="WhatsApp — только логотип"><span>только логотип</span></label></div>
       <div class="socin"><label for="k-soc-tg">Telegram</label><input type="text" id="k-soc-tg" data-k="tg" placeholder="@ник или t.me/…">
-        <label class="check logo"><input type="checkbox" data-logo="tg"> только логотип</label></div>
+        <label class="check logo"><input type="checkbox" data-logo="tg" aria-label="Telegram — только логотип"><span>только логотип</span></label></div>
       <div class="socin"><label for="k-soc-ig">Instagram</label><input type="text" id="k-soc-ig" data-k="ig" placeholder="@ник">
-        <label class="check logo"><input type="checkbox" data-logo="ig"> только логотип</label></div>
+        <label class="check logo"><input type="checkbox" data-logo="ig" aria-label="Instagram — только логотип"><span>только логотип</span></label></div>
       <div class="socin"><label for="k-soc-max">MAX</label><input type="text" id="k-soc-max" data-k="max" placeholder="ссылка на профиль или номер">
-        <label class="check logo"><input type="checkbox" data-logo="max"> только логотип</label></div>
+        <label class="check logo"><input type="checkbox" data-logo="max" aria-label="MAX — только логотип"><span>только логотип</span></label></div>
     </section>`;
     const $i = id => root.querySelector("#k-" + id), deleting = e => (e.inputType || "").startsWith("delete");
     const changed = () => { saveProfile(prof); onChange("profile"); };
