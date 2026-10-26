@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f3ee">
+<title>Мои клиенты</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Montserrat:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../kit/kit.css?v=202610270023">
+<script>try { var u = localStorage.getItem("beauty.ui"); if (u) document.documentElement.dataset.ui = u; } catch (e) {}</script>
+<style>
+  /* Клиенты мастера: дни рождения сверху, ниже поиск и карточки; правка — прямо в карточке. */
+  .cl { max-width: 760px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+  .demo { border: 1px dashed var(--accent); border-radius: 12px; padding: 12px 16px; font-size: 13.5px; line-height: 1.5; color: var(--page-text, var(--text)); }
+  .demo .linkbtn { font-size: inherit; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px 22px; display: flex; flex-direction: column; gap: 12px; color: var(--text); }
+  .bd-row { display: flex; align-items: center; justify-content: space-between; gap: 10px 14px; flex-wrap: wrap; padding: 10px 0; border-top: 1px solid var(--line); }
+  .bd-row:first-of-type { border-top: 0; padding-top: 2px; }
+  .bd-row b { font-weight: 600; }
+  .bd-row .when { color: var(--muted); font-size: 13.5px; }
+  .bd-row .when.today { color: var(--accent); font-weight: 600; }
+  .bd-row .btn { padding: 8px 14px; font-size: 13px; text-decoration: none; }
+  .tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+  .tools .btn { padding: 10px 16px; }
+  .clist { display: flex; flex-direction: column; gap: 10px; }
+  .cc { border: 1px solid var(--line); border-radius: 12px; background: var(--field); padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .cc-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px 12px; flex-wrap: wrap; }
+  .cc-top b { font-size: 17px; font-weight: 600; }
+  .cc-bd { font-size: 13.5px; color: var(--muted); }
+  .cc-bd.soon { color: var(--accent); font-weight: 500; }
+  .cc-ph { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 14px; }
+  .cc-ph a { color: var(--accent); text-decoration: none; }
+  .csv { display: flex; flex-wrap: wrap; gap: 6px; }
+  .sv { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--panel); border-radius: 99px; padding: 4px 4px 4px 12px; font-size: 13px; }
+  .sv i { font-style: normal; min-width: 24px; height: 22px; border-radius: 99px; background: var(--accent); color: var(--accent-ink); display: inline-grid; place-items: center; font-size: 12px; font-weight: 600; padding: 0 6px; }
+  .cc-meta { font-size: 12.5px; color: var(--muted); }
+  .cc-note { font-size: 13.5px; line-height: 1.45; white-space: pre-line; border-left: 3px solid var(--line); padding-left: 10px; }
+  .cc-act { display: flex; gap: 14px; flex-wrap: wrap; }
+  .cc-act .linkbtn { font-size: 13.5px; }
+  .count { font-size: 13px; color: var(--muted); }
+  #sort button { white-space: nowrap; padding-left: 4px; padding-right: 4px; }
+  /* форма клиента */
+  .cform { border: 1px solid var(--accent); border-radius: 12px; background: var(--field); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .bdate { display: grid; grid-template-columns: 76px minmax(0, 1fr) 92px; gap: 8px; }
+  textarea { width: 100%; font: inherit; font-size: 15px; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; min-height: 64px; resize: vertical; }
+  .cform input[type="text"], .cform input[type="tel"], .cform select { background: var(--panel); }
+  .fsvc { display: flex; flex-direction: column; gap: 6px; }
+  .fsv { display: grid; grid-template-columns: minmax(0, 1fr) 34px 34px 34px; gap: 6px; align-items: center; font-size: 14px; }
+  .fsv b { font-weight: 500; }
+  .fsv output { text-align: center; font-weight: 600; color: var(--accent); }
+  .fsv .icon { height: 34px; min-width: 34px; padding: 0; }
+  .vhead { font-size: 16px; font-weight: 600; }
+  .vsvcs { display: flex; flex-wrap: wrap; gap: 6px; }
+  .vsvcs .chip { white-space: normal; text-align: left; }
+  .vsvcs .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .vsvcs .chip[aria-pressed="true"] span { color: inherit; opacity: .8; }
+  .addsvc { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .addsvc .btn { padding: 8px 14px; }
+  .fbtns { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .fbtns .btn { flex: 0 1 auto; }
+  .fbtns .del { margin-left: auto; color: var(--bad); }
+  .empty { text-align: center; padding: 18px 6px; }
+  @media (max-width: 520px) {
+    .box { padding: 14px 14px 16px; }
+    .tools { grid-template-columns: 1fr; }
+    .cc { padding: 12px; }
+    .bdate { grid-template-columns: 64px minmax(0, 1fr) 80px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Мои клиенты</h1>
+    <nav><a href="../">Кабинет</a><a href="../price/">Прайс-лист</a><a href="../windows/">Свободные окошки</a><a href="../certs/">Сертификаты</a><a href="../booking/">Онлайн-запись</a><a href="../clients/" aria-current="page">Мои клиенты</a></nav>
+  </header>
+
+  <div class="cl">
+    <div class="demo">Демо: клиенты хранятся <b>только в этом браузере</b> — никуда не отправляются, но и на другом телефоне их не будет. Чтобы не потерять, сохраняйте копию в файл (внизу страницы).
+      <span id="exNote" hidden><br>Сейчас для примера добавлены выдуманные клиенты — <button class="linkbtn" type="button" id="clearEx">убрать примеры</button>.</span></div>
+
+    <section class="box" id="bdBox">
+      <h2>Скоро день рождения</h2>
+      <div id="bdList"></div>
+    </section>
+
+    <section class="box">
+      <h2>Клиенты</h2>
+      <div class="tools">
+        <input type="search" id="q" placeholder="Поиск по имени или телефону" aria-label="Поиск по имени или телефону" autocomplete="off">
+        <button class="btn" type="button" id="add">+ Добавить клиента</button>
+      </div>
+      <div class="seg" id="sort" role="group" aria-label="Порядок">
+        <button type="button" data-k="name">А–Я</button><button type="button" data-k="bday">День рожд.</button><button type="button" data-k="often">Частые</button><button type="button" data-k="last">Недавние</button>
+      </div>
+      <div id="list" class="clist"></div>
+      <div class="count" id="count"></div>
+    </section>
+
+    <section class="box">
+      <h2>Копия</h2>
+      <span class="hint">Файл с копией можно хранить в телефоне или облаке и загрузить на другом устройстве.</span>
+      <div class="btnrow"><button class="btn ghost" type="button" id="exp">Сохранить копию в файл</button><button class="btn ghost" type="button" id="imp">Загрузить из файла</button></div>
+      <input type="file" id="file" accept=".json,application/json" hidden>
+      <div class="status" id="status"></div>
+    </section>
+  </div>
+</div>
+<datalist id="svcOpts"></datalist>
+
+<script src="../kit/backgrounds.js?v=202610270023"></script>
+<script src="../kit/trends.js?v=202610270023"></script>
+<script src="../kit/kit.js?v=202610270023"></script>
+<script>
+const { esc, normPhone, fmtPhone, maskPhone } = Kit, $ = id => document.getElementById(id);
+const MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+const MONTHS1 = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
+const pad = n => String(n).padStart(2, "0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+const plural = (n, a, b, c) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c; };
+
+// услуги для подсказки — из прайса мастера, иначе базовые для ресниц
+const price = Kit.loadJSON("price.v1");
+const SVC_NAMES = ((price && price.services && price.services.length) ? price.services.map(s => s.name) :
+  ["Уголки", "Наращивание нижних ресниц", "Объём 1D (классика)", "Объём 1,5D–2D", "Объём 2,5D–3D", "Объём 4D–5D", "Снятие ресниц без последующего наращивания"])
+  .map(n => (n || "").trim()).filter(Boolean);
+$("svcOpts").innerHTML = SVC_NAMES.map(n => `<option value="${esc(n)}">`).join("");
+
+// примеры при первом открытии: дни рождения — от сегодняшнего дня, чтобы было видно напоминание
+function examples() {
+  const t = today(), bd = (days, age) => { const d = new Date(t); d.setDate(d.getDate() + days); return { d: d.getDate(), m: d.getMonth() + 1, y: age ? d.getFullYear() - age : "" }; };
+  const ago = days => { const d = new Date(t); d.setDate(d.getDate() - days); return iso(d); };
+  const s = i => SVC_NAMES[Math.min(i, SVC_NAMES.length - 1)];
+  return [
+    { name: "Анна Смирнова", phone: "+7 (900) 000-00-01", ...bd(4, 29), note: "Изгиб C, длина 11–12. Любит естественный эффект.", svcs: { [s(3)]: 7, [s(1)]: 3 }, last: ago(18) },
+    { name: "Мария Козлова", phone: "+7 (900) 000-00-02", ...bd(17, 0), note: "", svcs: { [s(2)]: 4 }, last: ago(40) },
+    { name: "Екатерина Волкова", phone: "+7 (900) 000-00-03", ...bd(26, 35), note: "Чувствительные глаза — клей для чувствительных.", svcs: { [s(4)]: 10, [s(0)]: 1, [s(6)]: 1 }, last: ago(9) },
+    { name: "Ольга Новикова", phone: "+7 (900) 000-00-04", ...bd(95, 41), note: "", svcs: { [s(5)]: 2 }, last: ago(75) },
+    { name: "Дарья Морозова", phone: "+7 (900) 000-00-05", d: "", m: "", y: "", note: "Приходит с дочкой.", svcs: { [s(0)]: 5, [s(1)]: 5 }, last: ago(3) },
+  ].map((c, i) => ({ id: "ex" + i, ex: true, ...c }));
+}
+let list = Kit.loadClients();
+if (!list) { list = examples(); Kit.saveClients(list); }
+const save = () => Kit.saveClients(list);
+
+// день рождения: через сколько дней ближайший, сколько исполнится
+function nextBd(c) {
+  if (!c.d || !c.m) return null;
+  const t = today(); let y = t.getFullYear();
+  const at = yy => { const leap = new Date(yy, 1, 29).getMonth() === 1; return new Date(yy, c.m - 1, c.m === 2 && c.d === 29 && !leap ? 28 : c.d); };
+  let d = at(y); if (d < t) d = at(++y);
+  return { days: Math.round((d - t) / 864e5), age: c.y ? y - c.y : 0 };
+}
+const bdText = c => c.d && c.m ? `${c.d} ${MONTHS[c.m - 1]}${c.y ? " " + c.y : ""}` : "";
+const whenText = n => n.days === 0 ? "сегодня 🎉" : n.days === 1 ? "завтра" : `через ${n.days} ${plural(n.days, "день", "дня", "дней")}`;
+const visits = c => Object.values(c.svcs || {}).reduce((a, n) => a + n, 0);
+const ruDate = s => s ? s.split("-").reverse().join(".") : "";
+
+function buildBirthdays() {
+  const soon = list.map(c => ({ c, n: nextBd(c) })).filter(x => x.n && x.n.days <= 30).sort((a, b) => a.n.days - b.n.days);
+  $("bdList").innerHTML = soon.length ? soon.map(({ c, n }) => `<div class="bd-row"><div><b>${esc(c.name)}</b> — ${c.d} ${MONTHS[c.m - 1]}<br>
+      <span class="when${n.days === 0 ? " today" : ""}">${whenText(n)}${n.age ? `, исполнится ${n.age} ${plural(n.age, "год", "года", "лет")}` : ""}</span></div>
+      <a class="btn" href="../certs/?to=${encodeURIComponent(c.name)}">Выписать сертификат</a></div>`).join("")
+    : `<span class="hint">В ближайший месяц дней рождения нет. Дату рождения можно вписать в карточке клиента.</span>`;
+}
+
+let sortBy = Kit.store.get("clients.sort") || "name", editing = null, draft = null;
+function sorted() {
+  const q = $("q").value.trim().toLowerCase(), qd = q.replace(/\D/g, "");
+  const f = list.filter(c => !q || c.name.toLowerCase().includes(q) || (qd.length >= 3 && normPhone(c.phone).includes(qd)) || (c.phone || "").includes(q));
+  const by = {
+    name: (a, b) => a.name.localeCompare(b.name, "ru"),
+    bday: (a, b) => ((nextBd(a) || { days: 999 }).days - (nextBd(b) || { days: 999 }).days) || a.name.localeCompare(b.name, "ru"),
+    often: (a, b) => visits(b) - visits(a) || a.name.localeCompare(b.name, "ru"),
+    last: (a, b) => (b.last || "").localeCompare(a.last || "") || a.name.localeCompare(b.name, "ru"),
+  }[sortBy];
+  return f.sort(by);
+}
+function card(c) {
+  const n = nextBd(c), p = normPhone(c.phone), sv = Object.entries(c.svcs || {}).filter(([, k]) => k > 0).sort((a, b) => b[1] - a[1]);
+  return `<article class="cc" data-id="${esc(c.id)}">
+    <div class="cc-top"><b>${esc(c.name)}</b>${c.d && c.m ? `<span class="cc-bd${n && n.days <= 30 ? " soon" : ""}">🎂 ${bdText(c)}${n && n.days <= 30 ? " · " + whenText(n) : ""}</span>` : ""}</div>
+    ${c.phone ? `<div class="cc-ph">${p ? `<a href="tel:+${p}">${esc(fmtPhone(c.phone))}</a><a href="https://wa.me/${p}" target="_blank" rel="noopener">WhatsApp</a><a href="https://t.me/+${p}" target="_blank" rel="noopener">Telegram</a>` : esc(c.phone)}</div>` : ""}
+    ${sv.length ? `<div class="csv">${sv.map(([s, k]) => `<span class="sv">${esc(s)}<i title="${k} ${plural(k, "раз", "раза", "раз")}">${k}</i></span>`).join("")}</div>` : ""}
+    <div class="cc-meta">${visits(c) ? `${visits(c)} ${plural(visits(c), "услуга", "услуги", "услуг")} всего` : "услуг пока нет"}${c.last ? ` · последний визит ${ruDate(c.last)}` : ""}</div>
+    ${c.note ? `<div class="cc-note">${esc(c.note)}</div>` : ""}
+    <div class="cc-act"><button class="linkbtn" type="button" data-edit>Изменить</button><button class="linkbtn" type="button" data-visit>+ Визит</button>${c.d && c.m ? `<a class="linkbtn" href="../certs/?to=${encodeURIComponent(c.name)}">Сертификат</a>` : ""}</div>
+  </article>`;
+}
+function form() {
+  const c = draft, sv = Object.entries(c.svcs);
+  return `<div class="cform" id="cform">
+    <div class="field"><label for="fName" class="req">Имя</label><input id="fName" type="text" maxlength="60" autocomplete="off" value="${esc(c.name)}" placeholder="Например, Анна Смирнова"></div>
+    <div class="field"><label for="fPhone">Телефон</label><input id="fPhone" type="tel" inputmode="tel" maxlength="18" autocomplete="off" value="${esc(c.phone)}" placeholder="+7 (999) 999-99-99"></div>
+    <div class="field"><span class="lbl">День рождения <span class="hint">— год можно не указывать</span></span>
+      <div class="bdate"><select id="fD" aria-label="День"><option value="">день</option>${Array.from({ length: 31 }, (_, i) => `<option${+c.d === i + 1 ? " selected" : ""}>${i + 1}</option>`).join("")}</select>
+        <select id="fM" aria-label="Месяц"><option value="">месяц</option>${MONTHS1.map((m, i) => `<option value="${i + 1}"${+c.m === i + 1 ? " selected" : ""}>${m}</option>`).join("")}</select>
+        <input id="fY" type="text" inputmode="numeric" maxlength="4" placeholder="год" aria-label="Год" value="${esc(c.y || "")}"></div></div>
+    <div class="field"><span class="lbl">Услуги — сколько раз делали</span>
+      <div class="fsvc">${sv.length ? sv.map(([s, k]) => `<div class="fsv" data-s="${esc(s)}"><b>${esc(s)}</b><button class="icon" type="button" data-d="-1" aria-label="Меньше">−</button><output>${k}</output><button class="icon" type="button" data-d="1" aria-label="Больше">+</button></div>`).join("") : `<span class="hint">Пока пусто — добавьте услугу ниже.</span>`}</div>
+      <div class="addsvc"><input id="fSvc" type="text" list="svcOpts" maxlength="60" placeholder="Добавить услугу" aria-label="Добавить услугу"><button class="btn ghost" type="button" id="fSvcAdd">Добавить</button></div></div>
+    <div class="field"><label for="fNote">Заметки</label><textarea id="fNote" maxlength="400" placeholder="Изгиб, длина, аллергия, пожелания…">${esc(c.note)}</textarea></div>
+    <div class="status" id="fStatus"></div>
+    <div class="fbtns"><button class="btn" type="button" id="fSave">Сохранить</button><button class="btn ghost" type="button" id="fCancel">Отмена</button>${editing !== "new" ? `<button class="linkbtn del" type="button" id="fDel">Удалить клиента</button>` : ""}</div>
+  </div>`;
+}
+// визит: дата и отметки услуг; при сохранении каждая отмеченная услуга +1
+function visitForm() {
+  const c = draft, v = draft.visit, names = [...new Set([...Object.entries(c.svcs).sort((a, b) => b[1] - a[1]).map(([s]) => s), ...SVC_NAMES, ...v.picked])];
+  return `<div class="cform" id="cform">
+    <b class="vhead">Визит — ${esc(c.name)}</b>
+    <div class="field"><label for="vDate">Дата</label><input id="vDate" type="date" value="${esc(v.date)}" max="${iso(today())}"></div>
+    <div class="field"><span class="lbl">Что сделали — отметьте</span>
+      <div class="vsvcs">${names.map(s => `<button class="chip" type="button" data-pick="${esc(s)}" aria-pressed="${v.picked.includes(s)}">${esc(s)}${c.svcs[s] ? ` <span>${c.svcs[s]}</span>` : ""}</button>`).join("")}</div>
+      <div class="addsvc"><input id="fSvc" type="text" list="svcOpts" maxlength="60" placeholder="Другая услуга" aria-label="Другая услуга"><button class="btn ghost" type="button" id="fSvcAdd">Добавить</button></div></div>
+    <div class="status" id="fStatus"></div>
+    <div class="fbtns"><button class="btn" type="button" id="vSave">Сохранить визит</button><button class="btn ghost" type="button" id="fCancel">Отмена</button></div>
+  </div>`;
+}
+function build() {
+  $("sort").querySelectorAll("[data-k]").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === sortBy));
+  const f = sorted();
+  $("list").innerHTML = (editing === "new" ? form() : "") + (f.map(c => c.id === editing ? (draft.visit ? visitForm() : form()) : card(c)).join("")
+    || (editing === "new" ? "" : `<div class="empty hint">${list.length ? "Никого не нашли." : "Клиентов пока нет — нажмите «+ Добавить клиента». Клиенты из онлайн-записи появятся здесь сами."}</div>`));
+  $("count").textContent = list.length ? `Всего: ${list.length} ${plural(list.length, "клиент", "клиента", "клиентов")}` : "";
+  $("exNote").hidden = !list.some(c => c.ex);
+  buildBirthdays();
+}
+// форма: черновик правим на месте, в список пишем по «Сохранить»
+function readForm() {
+  if (draft.visit) { draft.visit.date = $("vDate").value; return; }
+  draft.name = $("fName").value; draft.phone = $("fPhone").value; draft.note = $("fNote").value;
+  draft.d = +$("fD").value || ""; draft.m = +$("fM").value || ""; draft.y = +$("fY").value || "";
+}
+function openForm(id, visit) {
+  editing = id;
+  const c = id === "new" ? { id: Date.now().toString(36), name: "", phone: "", d: "", m: "", y: "", note: "", svcs: {} } : list.find(x => x.id === id);
+  draft = JSON.parse(JSON.stringify(c));
+  if (visit) draft.visit = { date: iso(today()), picked: [] };
+  build(); $("cform").scrollIntoView({ block: "nearest" }); if (!visit) $("fName").focus({ preventScroll: true });
+}
+function closeForm() { editing = draft = null; build(); }
+
+$("list").addEventListener("click", e => {
+  const cc = e.target.closest(".cc");
+  if (cc && e.target.closest("[data-edit]")) return openForm(cc.dataset.id);
+  if (cc && e.target.closest("[data-visit]")) return openForm(cc.dataset.id, true);
+  if (!draft) return;
+  const pick = e.target.closest("[data-pick]");
+  if (pick) { const s = pick.dataset.pick, p = draft.visit.picked; p.includes(s) ? p.splice(p.indexOf(s), 1) : p.push(s); pick.setAttribute("aria-pressed", p.includes(s)); return; }
+  if (e.target.id === "fSvcAdd" && draft.visit) { readForm(); const s = $("fSvc").value.trim(); if (s && !draft.visit.picked.includes(s)) draft.visit.picked.push(s); build(); return; }
+  if (e.target.id === "vSave") {
+    readForm(); const v = draft.visit;
+    if (!v.picked.length) { $("fStatus").textContent = "Отметьте хотя бы одну услугу."; $("fStatus").className = "status err"; return; }
+    const c = list.find(x => x.id === editing);
+    v.picked.forEach(s => c.svcs[s] = (c.svcs[s] || 0) + 1);
+    if (v.date && (!c.last || v.date > c.last)) c.last = v.date;
+    delete c.ex; save(); closeForm(); return;
+  }
+  const step = e.target.closest("[data-d]");
+  if (step) { readForm(); const s = step.closest(".fsv").dataset.s, k = (draft.svcs[s] || 0) + +step.dataset.d; if (k > 0) draft.svcs[s] = k; else delete draft.svcs[s]; build(); return; }
+  if (e.target.id === "fSvcAdd") { readForm(); const s = $("fSvc").value.trim(); if (s) draft.svcs[s] = (draft.svcs[s] || 0) + 1; build(); $("fSvc").focus(); return; }
+  if (e.target.id === "fCancel") return closeForm();
+  if (e.target.id === "fDel") { if (confirm(`Удалить «${draft.name || "клиента"}»?`)) { list = list.filter(c => c.id !== editing); save(); closeForm(); } return; }
+  if (e.target.id === "fSave") {
+    readForm();
+    const st = (t) => { $("fStatus").textContent = t; $("fStatus").className = "status err"; };
+    if (!draft.name.trim()) { st("Укажите имя."); return $("fName").focus(); }
+    if (draft.phone.trim() && !normPhone(draft.phone)) { st("Телефон указан не полностью."); return $("fPhone").focus(); }
+    if ((draft.d && !draft.m) || (!draft.d && draft.m)) { st("Укажите и день, и месяц рождения."); return; }
+    const yr = today().getFullYear();
+    if (draft.y && (draft.y < yr - 100 || draft.y > yr)) { st("Год рождения — четыре цифры, например 1990."); return $("fY").focus(); }
+    draft.name = draft.name.trim(); draft.note = draft.note.trim(); draft.phone = normPhone(draft.phone) ? fmtPhone(draft.phone) : "";
+    delete draft.ex;                                            // поправленный пример становится своим клиентом
+    const i = list.findIndex(c => c.id === draft.id);
+    if (i >= 0) list[i] = draft; else list.push(draft);
+    save(); closeForm();
+  }
+});
+$("list").addEventListener("input", e => { if (e.target.id === "fPhone") e.target.value = maskPhone(e.target.value, (e.inputType || "").startsWith("delete")); });
+$("list").addEventListener("keydown", e => { if (e.target.id === "fSvc" && e.key === "Enter") { e.preventDefault(); $("fSvcAdd").click(); } });
+$("add").addEventListener("click", () => { $("q").value = ""; openForm("new"); });
+$("q").addEventListener("input", () => { if (!draft) build(); });
+$("sort").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (!b) return; sortBy = b.dataset.k; Kit.store.set("clients.sort", sortBy); if (draft) readForm(); build(); });
+$("clearEx").addEventListener("click", () => { list = list.filter(c => !c.ex); save(); closeForm(); });
+
+// копия в файл и обратно
+function setStatus(t, kind) { $("status").textContent = t; $("status").className = "status" + (kind ? " " + kind : ""); }
+$("exp").addEventListener("click", () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ clients: list, saved: new Date().toISOString() }, null, 1)], { type: "application/json" }));
+  a.download = `клиенты_${iso(today())}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  setStatus("Файл сохранён в «Загрузки».", "ok");
+});
+$("imp").addEventListener("click", () => $("file").click());
+$("file").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    const data = JSON.parse(await f.text()), arr = Array.isArray(data) ? data : data.clients;
+    if (!Array.isArray(arr) || arr.some(c => !c || typeof c.name !== "string")) throw 0;
+    if (list.length && !confirm(`Заменить текущий список (${list.length}) клиентами из файла (${arr.length})?`)) return;
+    list = arr.map(c => ({ id: String(c.id || Math.random().toString(36).slice(2)), name: c.name, phone: c.phone || "", d: c.d || "", m: c.m || "", y: c.y || "", note: c.note || "", svcs: c.svcs || {}, last: c.last || "", ...(c.ex ? { ex: true } : {}) }));
+    save(); closeForm(); setStatus(`Загружено: ${list.length} ${plural(list.length, "клиент", "клиента", "клиентов")}.`, "ok");
+  } catch (x) { setStatus("Это не файл с копией клиентов.", "err"); }
+});
+
+build();
+</script>
+</body>
+</html>

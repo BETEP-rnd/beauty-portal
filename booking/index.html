@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f7f3ee">
 <title>Онлайн-запись</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Montserrat:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="../kit/kit.css?v=202610270008">
+<link rel="stylesheet" href="../kit/kit.css?v=202610270023">
 <script>try { var u = localStorage.getItem("beauty.ui"); if (u) document.documentElement.dataset.ui = u; } catch (e) {}</script>
 <style>
   /* Страница записи глазами клиента: шаги сверху вниз — услуга, день, время, контакты. */
@@ -67,7 +67,7 @@
 <div class="wrap">
   <header class="top">
     <h1>Онлайн-запись</h1>
-    <nav><a href="../">Кабинет</a><a href="../price/">Прайс-лист</a><a href="../windows/">Свободные окошки</a><a href="../certs/">Сертификаты</a><a href="../booking/" aria-current="page">Онлайн-запись</a></nav>
+    <nav><a href="../">Кабинет</a><a href="../price/">Прайс-лист</a><a href="../windows/">Свободные окошки</a><a href="../certs/">Сертификаты</a><a href="../booking/" aria-current="page">Онлайн-запись</a><a href="../clients/">Мои клиенты</a></nav>
   </header>
 
   <div class="book">
@@ -133,9 +133,9 @@
   </div>
 </div>
 
-<script src="../kit/backgrounds.js?v=202610270008"></script>
-<script src="../kit/trends.js?v=202610270008"></script>
-<script src="../kit/kit.js?v=202610270008"></script>
+<script src="../kit/backgrounds.js?v=202610270023"></script>
+<script src="../kit/trends.js?v=202610270023"></script>
+<script src="../kit/kit.js?v=202610270023"></script>
 <script>
 // Демо: окошки берутся из раздела «Свободные окошки», услуги и цены — из «Прайс-листа» этого браузера.
 // Запись никуда не отправляется и не сохраняется.
@@ -335,7 +335,8 @@ $("send").addEventListener("click", () => {
   if (!$("cAgree").checked) { setStatus("Нужно согласие на обработку данных.", "err"); return; }
   setStatus("");
   $("doneText").innerHTML = `${summaryText()}<br>Мастер: ${esc(prof.master.trim())}, ${esc(fmtPhone(prof.phone))}<br>Вы: ${esc($("cName").value.trim())}, ${esc(fmtPhone($("cPhone").value))}`;
-  $("doneHint").textContent = "Демо: в рабочей версии мастер сразу получит заявку (например, в Telegram), а это время исчезнет из свободных. Сейчас запись нигде не сохраняется.";
+  Kit.addVisit($("cName").value, $("cPhone").value, sel.svcs.map(i => SVCS[i].name), sel.day);
+  $("doneHint").innerHTML = "Демо: в рабочей версии мастер сразу получит заявку (например, в Telegram), а это время исчезнет из свободных. Сейчас клиент добавлен только в <a href=\"../clients/\">«Мои клиенты»</a> в этом браузере.";
   ["sCal", "s1", "s2", "s3", "s4", "modes"].forEach(id => $(id).hidden = true); $("done").hidden = false;
   window.scrollTo({ top: 0, behavior: "smooth" });
 });

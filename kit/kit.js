@@ -595,6 +595,19 @@
   }
   const safeName = s => s.trim().replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, "_") || "мастер";
 
+  // ---------- мои клиенты (демо: только в этом браузере) ----------
+  const CLIENTS_KEY = "beauty.clients";
+  const loadClients = () => { const a = loadJSON(CLIENTS_KEY); return Array.isArray(a) ? a : null; };
+  const saveClients = list => store.set(CLIENTS_KEY, JSON.stringify(list));
+  function addVisit(name, phone, services, date) {              // запись: находим клиента по телефону (или имени) и прибавляем услуги
+    const list = loadClients() || [], p = normPhone(phone), nm = name.trim();
+    let c = list.find(x => p && normPhone(x.phone) === p) || list.find(x => !p && x.name.trim().toLowerCase() === nm.toLowerCase());
+    if (!c) { c = { id: Date.now().toString(36), name: nm, phone: fmtPhone(phone), d: "", m: "", y: "", note: "", svcs: {} }; list.push(c); }
+    services.forEach(s => c.svcs[s] = (c.svcs[s] || 0) + 1);
+    if (date && (!c.last || date > c.last)) c.last = date;
+    saveClients(list); return c;
+  }
+
   uiTheme();
 
   Object.assign(Kit, {
@@ -602,5 +615,6 @@
     digits, normPhone, fmtPhone, maskPhone, group, socText, qrTarget, contactsHtml, loadProfile, saveProfile,
     baseStyle, styleOf, fontOf, caseOf, painter, header, footer, press,
     tabs, designPanel, takenThemes, claimTheme, SECTIONS, fontsPanel, contactsPanel, showPanel, defaultShow, sectionShow, forSection, output, profileError, safeName, PRESET,
+    loadClients, saveClients, addVisit,
   });
 })();
