@@ -4,83 +4,142 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f7f3ee">
-<title>Личный кабинет</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Montserrat:wght@400;500;600&display=swap">
+<meta name="description" content="Мастерфолио — прайс-листы, свободные окошки, подарочные сертификаты и клиентская база для мастеров красоты.">
+<title>Мастерфолио — всё для мастера красоты</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Montserrat:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="kit/kit.css?v=202610270023">
 <script>try { var u = localStorage.getItem("beauty.ui"); if (u) document.documentElement.dataset.ui = u; } catch (e) {}</script>
 <style>
-  /* Кабинет: слева приветствие и разделы, справа «Мои данные»; на телефоне — друг под другом. */
-  .cab { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); gap: 28px; align-items: start; }
-  .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-  .hello { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 8px; }
-  .hello .who { font-family: var(--display); font-style: italic; font-weight: 500; font-size: 34px; line-height: 1.1; }
-  .hello .facts { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); font-size: 14px; }
-  .card { display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; color: inherit; text-decoration: none; }
-  .card:hover { border-color: var(--accent); }
-  .card b { display: block; font-size: 18px; margin-bottom: 6px; color: var(--accent); }
-  .card span { color: var(--muted); font-size: 14px; line-height: 1.5; }
-  .card.soon { opacity: .6; }
-  .card.soon:hover { border-color: var(--line); }
-  .me { padding-top: 22px; }
-  /* «Мои данные» — крупнее, чем панели в разделах */
-  .me h2 { font-size: 14px; }
-  .me label, .me .lbl { font-size: 14px; }
-  .me .check { font-size: 16px; }
-  .me .check.logo, .me .sochead span, .me .hint, .me .linkbtn { font-size: 14px; }
-  .me .seg button { font-size: 15px; }
-  @media (min-width: 421px) { .me .socin { grid-template-columns: 128px minmax(0, 1fr) auto; } }
-  .me .check input { width: 18px; height: 18px; }
-  .me input[type="text"], .me input[type="tel"], .me input[type="url"], .me input[type="email"] { font-size: 17px; }
-  @media (max-width: 520px) {
-    .me label, .me .lbl, .me .check.logo, .me .hint, .me .linkbtn { font-size: 13.5px; }
-    .me .check { font-size: 15px; }
-    .me .seg button { font-size: 14px; }
-    .me input[type="text"], .me input[type="tel"], .me input[type="url"], .me input[type="email"] { font-size: 16px; }
+  body { padding-bottom: 24px; }
+  .landing { max-width: 1180px; margin: 0 auto; }
+  .header { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .brand { color: inherit; text-decoration: none; font-family: var(--display); font-size: 32px; font-weight: 600; line-height: 1; }
+  .header nav { display: flex; align-items: center; gap: 22px; }
+  .header nav a { color: var(--page-muted, var(--muted)); font-size: 13px; text-decoration: none; }
+  .header nav a:hover { color: var(--accent); }
+  .header .enter { border: 1px solid var(--page-line, var(--line)); border-radius: 99px; padding: 10px 17px; color: var(--page-text, var(--text)); }
+  .hero { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(330px, .92fr); gap: 70px; align-items: center; min-height: 600px; padding: 54px 0 64px; }
+  .eyebrow { margin: 0 0 18px; color: var(--accent); font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; }
+  .hero h1 { max-width: 650px; margin: 0; font-family: var(--display); font-size: clamp(48px, 5.5vw, 72px); font-weight: 500; line-height: .99; letter-spacing: -.025em; }
+  .hero h1 em { display: block; color: var(--accent); font-weight: 500; }
+  .lead { max-width: 550px; margin: 26px 0 0; color: var(--page-muted, var(--muted)); font-size: 17px; line-height: 1.7; }
+  .actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+  .actions .btn { padding: 14px 22px; text-decoration: none; }
+  .actions .btn.ghost { border-color: var(--page-line, var(--line)); color: var(--page-text, var(--text)); }
+  .note { margin: 18px 0 0; color: var(--page-muted, var(--muted)); font-size: 12px; line-height: 1.5; }
+  .showcase { position: relative; min-height: 430px; display: grid; place-items: center; }
+  .glow { position: absolute; width: 390px; height: 390px; border-radius: 50%; background: var(--accent); opacity: .09; filter: blur(2px); }
+  .sheet { position: relative; width: 260px; min-height: 350px; padding: 32px 25px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); box-shadow: 0 28px 70px rgba(35, 22, 14, .2); transform: rotate(3deg); }
+  .sheet::before { content: ""; display: block; width: 38px; height: 2px; margin: 0 auto 22px; background: var(--accent); }
+  .sheet small { display: block; color: var(--muted); font-size: 8px; letter-spacing: .22em; text-align: center; text-transform: uppercase; }
+  .sheet h2 { margin: 10px 0 26px; color: var(--text); font-family: var(--display); font-size: 32px; font-weight: 500; letter-spacing: 0; text-align: center; text-transform: none; }
+  .service { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 10px; }
+  .service span:last-child { color: var(--accent); white-space: nowrap; }
+  .sheet .name { margin-top: 30px; font-family: var(--display); font-size: 19px; font-style: italic; text-align: center; }
+  .window { position: absolute; right: -14px; bottom: 24px; width: 195px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--text); box-shadow: 0 18px 45px rgba(35, 22, 14, .2); transform: rotate(-4deg); }
+  .window b { display: block; color: var(--accent); font-family: var(--display); font-size: 21px; font-weight: 600; }
+  .window p { margin: 5px 0 13px; color: var(--muted); font-size: 9px; }
+  .times { display: flex; gap: 6px; flex-wrap: wrap; }
+  .times span { padding: 6px 9px; border: 1px solid var(--line); border-radius: 99px; color: var(--accent); font-size: 9px; }
+  .features { padding: 64px 0; border-top: 1px solid var(--page-line, var(--line)); }
+  .section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+  .section-head h2 { margin: 0; color: inherit; font-family: var(--display); font-size: 40px; font-weight: 500; letter-spacing: 0; text-transform: none; }
+  .section-head p { max-width: 390px; margin: 0; color: var(--page-muted, var(--muted)); font-size: 13px; line-height: 1.6; }
+  .tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .tool { position: relative; min-height: 180px; padding: 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--text); text-decoration: none; transition: border-color .15s, transform .15s; }
+  .tool:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .tool .number { color: var(--accent); font-family: var(--display); font-size: 18px; font-style: italic; }
+  .tool h3 { margin: 20px 0 9px; font-size: 16px; font-weight: 600; }
+  .tool p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .tool .arrow { position: absolute; right: 22px; top: 20px; color: var(--accent); font-size: 20px; }
+  .badge { display: inline-block; margin-left: 7px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: 8px; font-weight: 500; letter-spacing: .08em; vertical-align: 2px; text-transform: uppercase; }
+  .start { display: flex; align-items: center; justify-content: space-between; gap: 30px; margin: 10px 0 54px; padding: 34px 38px; border-radius: 16px; background: var(--accent); color: var(--accent-ink); }
+  .start h2 { margin: 0 0 8px; color: inherit; font-family: var(--display); font-size: 34px; font-weight: 500; letter-spacing: 0; text-transform: none; }
+  .start p { margin: 0; font-size: 13px; line-height: 1.5; opacity: .8; }
+  .start .btn { flex: none; border-color: var(--accent-ink); background: var(--accent-ink); color: var(--accent); text-decoration: none; }
+  .footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 24px; border-top: 1px solid var(--page-line, var(--line)); color: var(--page-muted, var(--muted)); font-size: 11px; }
+  .footer .brand { font-size: 23px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: minmax(0, 1fr) 300px; gap: 30px; }
+    .showcase { transform: scale(.88); }
+    .tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
-  @media (max-width: 860px) { .cab { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 700px) {
+    .hero { grid-template-columns: minmax(0, 1fr); min-height: 0; padding: 58px 0; }
+    .hero h1 { max-width: 560px; }
+    .showcase { min-height: 390px; transform: none; }
+    .section-head { align-items: start; flex-direction: column; }
+    .start { align-items: start; flex-direction: column; }
+  }
+  @media (max-width: 480px) {
+    .header nav { gap: 10px; }
+    .header nav a:first-child { display: none; }
+    .brand { font-size: 27px; }
+    .header .enter { padding: 9px 13px; }
+    .hero { padding: 45px 0; }
+    .hero h1 { font-size: 47px; }
+    .lead { font-size: 15px; }
+    .actions { align-items: stretch; flex-direction: column; }
+    .actions .btn { text-align: center; }
+    .showcase { min-height: 360px; }
+    .sheet { width: 225px; min-height: 320px; padding: 27px 21px; }
+    .window { right: -4px; bottom: 0; width: 170px; }
+    .features { padding: 45px 0; }
+    .section-head h2 { font-size: 34px; }
+    .tools { grid-template-columns: minmax(0, 1fr); }
+    .tool { min-height: 155px; }
+    .start { padding: 26px; }
+    .footer { align-items: start; flex-direction: column; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <h1>Личный кабинет</h1>
-    <nav><a href="./" aria-current="page">Кабинет</a><a href="price/">Прайс-лист</a><a href="windows/">Свободные окошки</a><a href="certs/">Сертификаты</a><a href="booking/">Онлайн-запись</a><a href="clients/">Мои клиенты</a></nav>
+<div class="landing">
+  <header class="header">
+    <a class="brand" href="./">Мастерфолио</a>
+    <nav aria-label="Основная навигация"><a href="#features">Возможности</a><a class="enter" href="cabinet/">Войти в кабинет</a></nav>
   </header>
 
-  <div class="cab">
-    <div class="col">
-      <div class="hello">
-        <span class="lbl">Мастер</span>
-        <div class="who" id="who"></div>
-        <div class="facts" id="facts"></div>
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Пространство мастера красоты</p>
+        <h1>Ваше мастерство.<em>Красиво представлено.</em></h1>
+        <p class="lead">Прайс-листы, свободные окошки, подарочные сертификаты и клиенты — все необходимые инструменты в одном месте.</p>
+        <div class="actions"><a class="btn" href="cabinet/">Открыть личный кабинет</a><a class="btn ghost" href="#features">Посмотреть возможности</a></div>
+        <p class="note">Работает в браузере на телефоне и компьютере.</p>
       </div>
-      <a class="card" href="price/"><b>Прайс-лист</b><span>Услуги и цены, свои услуги, 300 фонов, шрифты — картинка для сторис и мессенджеров.</span></a>
-      <a class="card" href="windows/"><b>Свободные окошки</b><span>Отметьте свободное время на неделю или на 2–3 месяца — картинка для канала или сторис.</span></a>
-      <a class="card" href="certs/"><b>Подарочные сертификаты</b><span>Выпуск сертификата с номером, проверка и погашение, журнал — по PIN. 300 фонов и шрифты, как в других разделах.</span></a>
-      <a class="card" href="booking/"><b>Онлайн-запись</b><span>Демо: так клиенты увидят свободные окошки, выберут услугу и время и запишутся.</span></a>
-      <a class="card" href="clients/"><b>Мои клиенты</b><span>Телефоны, дни рождения, любимые услуги и сколько раз их делали. Напомнит, кому скоро дарить сертификат. Демо: данные только в этом браузере.</span></a>
-    </div>
-    <div class="panel me" id="me"></div>
-  </div>
-</div>
+      <div class="showcase" aria-hidden="true">
+        <div class="glow"></div>
+        <div class="sheet">
+          <small>Мастер красоты</small>
+          <h2>Прайс-лист</h2>
+          <div class="service"><span>Ваша услуга</span><span>1 500 ₽</span></div>
+          <div class="service"><span>Ещё одна услуга</span><span>2 000 ₽</span></div>
+          <div class="service"><span>Комплекс</span><span>3 000 ₽</span></div>
+          <div class="name">Ваше имя</div>
+        </div>
+        <div class="window"><b>Свободные окошки</b><p>Ближайшее свободное время</p><div class="times"><span>12:00</span><span>15:30</span><span>18:00</span></div></div>
+      </div>
+    </section>
 
-<script src="kit/backgrounds.js?v=202610270023"></script>
-<script src="kit/trends.js?v=202610270023"></script>
-<script src="kit/kit.js?v=202610270023"></script>
-<script>
-const prof = Kit.loadProfile(), $ = id => document.getElementById(id);
-function hello() {
-  $("who").textContent = prof.master.trim() || "Имя мастера";
-  $("facts").innerHTML = Kit.contactsHtml(prof);
-}
-const panel = Kit.contactsPanel($("me"), prof, hello);
-$("me").querySelector("h2").textContent = "Мои данные";
-// из раздела нажали на незаполненный контакт (#ig, #max, #email…): ставим курсор в его поле, а если вписано, но выключено — на галку
-const want = location.hash.slice(1);
-if (want === "email" || want === "hideBusy") panel.focus(want);
-else if (prof.soc[want]) panel.focus(prof.soc[want].val.trim() || want === "wa" ? want + "-on" : "soc-" + want);
-Kit.saveProfile(prof);                                          // данные по умолчанию сразу видны и в разделах
-hello();
-</script>
+    <section class="features" id="features">
+      <div class="section-head"><h2>Всё для ежедневной работы</h2><p>Создавайте материалы для соцсетей и мессенджеров, показывайте свободное время и сохраняйте важное о клиентах.</p></div>
+      <div class="tools">
+        <a class="tool" href="price/"><span class="number">01</span><span class="arrow">↗</span><h3>Прайс-лист</h3><p>Соберите список услуг, выберите оформление и скачайте готовую картинку для сторис или поста.</p></a>
+        <a class="tool" href="windows/"><span class="number">02</span><span class="arrow">↗</span><h3>Свободные окошки</h3><p>Отметьте свободное время на удобной сетке и поделитесь расписанием с клиентами.</p></a>
+        <a class="tool" href="certs/"><span class="number">03</span><span class="arrow">↗</span><h3>Подарочные сертификаты</h3><p>Создавайте именные сертификаты, проверяйте их по номеру и ведите журнал выдачи.</p></a>
+        <a class="tool" href="booking/"><span class="number">04</span><span class="arrow">↗</span><h3>Онлайн-запись<span class="badge">Демо</span></h3><p>Покажите клиентам услуги и свободное время — запись по услугам или по дате.</p></a>
+        <a class="tool" href="clients/"><span class="number">05</span><span class="arrow">↗</span><h3>Мои клиенты<span class="badge">Демо</span></h3><p>Контакты, дни рождения, история визитов и любимые услуги каждого клиента.</p></a>
+        <a class="tool" href="cabinet/"><span class="number">06</span><span class="arrow">↗</span><h3>Личный кабинет</h3><p>Заполните данные мастера один раз — они будут использоваться во всех разделах.</p></a>
+      </div>
+    </section>
+
+    <section class="start"><div><h2>Попробуйте Мастерфолио</h2><p>Начните с профиля мастера или сразу откройте нужный инструмент.</p></div><a class="btn" href="cabinet/">Перейти в кабинет</a></section>
+  </main>
+
+  <footer class="footer"><a class="brand" href="./">Мастерфолио</a><span>Инструменты для мастеров красоты</span></footer>
+</div>
 </body>
 </html>
