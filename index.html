@@ -46,12 +46,11 @@
   .section-head h2 { margin: 0; color: inherit; font-family: var(--display); font-size: 40px; font-weight: 500; letter-spacing: 0; text-transform: none; }
   .section-head p { max-width: 390px; margin: 0; color: var(--page-muted, var(--muted)); font-size: 13px; line-height: 1.6; }
   .tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-  .tool { position: relative; min-height: 180px; padding: 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--text); text-decoration: none; transition: border-color .15s, transform .15s; }
-  .tool:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .tool { position: relative; min-height: 180px; padding: 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--text); }
   .tool .number { color: var(--accent); font-family: var(--display); font-size: 18px; font-style: italic; }
   .tool h3 { margin: 20px 0 9px; font-size: 16px; font-weight: 600; }
   .tool p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
-  .tool .arrow { position: absolute; right: 22px; top: 20px; color: var(--accent); font-size: 20px; }
+  .btn.disabled { cursor: default; }
   .badge { display: inline-block; margin-left: 7px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: 8px; font-weight: 500; letter-spacing: .08em; vertical-align: 2px; text-transform: uppercase; }
   .start { display: flex; align-items: center; justify-content: space-between; gap: 30px; margin: 10px 0 54px; padding: 34px 38px; border-radius: 16px; background: var(--accent); color: var(--accent-ink); }
   .start h2 { margin: 0 0 8px; color: inherit; font-family: var(--display); font-size: 34px; font-weight: 500; letter-spacing: 0; text-transform: none; }
@@ -107,7 +106,7 @@
         <p class="eyebrow">Пространство мастера красоты</p>
         <h1>Ваше мастерство.<em>Красиво представлено.</em></h1>
         <p class="lead">Прайс-листы, свободные окошки, подарочные сертификаты и клиенты — все необходимые инструменты в одном месте.</p>
-        <div class="actions"><a class="btn" href="#features">Посмотреть возможности</a><a class="btn ghost" href="price/">Создать прайс-лист</a></div>
+        <div class="actions"><a class="btn" href="#features">Посмотреть возможности</a><span class="btn ghost disabled">Создать прайс-лист</span></div>
         <p class="note">Работает в браузере на телефоне и компьютере.</p>
       </div>
       <div class="showcase" aria-hidden="true">
@@ -127,15 +126,15 @@
     <section class="features" id="features">
       <div class="section-head"><h2>Всё для ежедневной работы</h2><p>Создавайте материалы для соцсетей и мессенджеров, показывайте свободное время и сохраняйте важное о клиентах.</p></div>
       <div class="tools">
-        <a class="tool" href="price/"><span class="number">01</span><span class="arrow">↗</span><h3>Прайс-лист</h3><p>Соберите список услуг, выберите оформление и скачайте готовую картинку для сторис или поста.</p></a>
-        <a class="tool" href="windows/"><span class="number">02</span><span class="arrow">↗</span><h3>Свободные окошки</h3><p>Отметьте свободное время на удобной сетке и поделитесь расписанием с клиентами.</p></a>
-        <a class="tool" href="certs/"><span class="number">03</span><span class="arrow">↗</span><h3>Подарочные сертификаты</h3><p>Создавайте именные сертификаты, проверяйте их по номеру и ведите журнал выдачи.</p></a>
-        <a class="tool" href="booking/"><span class="number">04</span><span class="arrow">↗</span><h3>Онлайн-запись<span class="badge">Демо</span></h3><p>Покажите клиентам услуги и свободное время — запись по услугам или по дате.</p></a>
-        <a class="tool" href="clients/"><span class="number">05</span><span class="arrow">↗</span><h3>Мои клиенты<span class="badge">Демо</span></h3><p>Контакты, дни рождения, история визитов и любимые услуги каждого клиента.</p></a>
+        <div class="tool"><span class="number">01</span><h3>Прайс-лист</h3><p>Соберите список услуг, выберите оформление и скачайте готовую картинку для сторис или поста.</p></div>
+        <div class="tool"><span class="number">02</span><h3>Свободные окошки</h3><p>Отметьте свободное время на удобной сетке и поделитесь расписанием с клиентами.</p></div>
+        <div class="tool"><span class="number">03</span><h3>Подарочные сертификаты</h3><p>Создавайте именные сертификаты, проверяйте их по номеру и ведите журнал выдачи.</p></div>
+        <div class="tool"><span class="number">04</span><h3>Онлайн-запись<span class="badge">Демо</span></h3><p>Покажите клиентам услуги и свободное время — запись по услугам или по дате.</p></div>
+        <div class="tool"><span class="number">05</span><h3>Мои клиенты<span class="badge">Демо</span></h3><p>Контакты, дни рождения, история визитов и любимые услуги каждого клиента.</p></div>
       </div>
     </section>
 
-    <section class="start"><div><h2>Попробуйте Мастерфолио</h2><p>Создайте прайс-лист или отметьте свободные окошки.</p></div><a class="btn" href="price/">Создать прайс-лист</a></section>
+    <section class="start"><div><h2>Попробуйте Мастерфолио</h2><p>Создайте прайс-лист или отметьте свободные окошки.</p></div><span class="btn disabled">Создать прайс-лист</span></section>
   </main>
 
   <footer class="footer"><a class="brand" href="./">Мастерфолио</a><span>Инструменты для мастеров красоты</span></footer>
